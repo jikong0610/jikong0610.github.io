@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Minecraft</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #87ceeb;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #crosshair {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: "";
+            position: absolute;
+            background: white;
+            box-shadow: 0 0 2px black;
+        }
+
+        #crosshair::before {
+            width: 2px;
+            height: 18px;
+            left: 8px;
+            top: 0;
+        }
+
+        #crosshair::after {
+            width: 18px;
+            height: 2px;
+            left: 0;
+            top: 8px;
+        }
+
+        #hud {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            color: white;
+            text-shadow: 2px 2px 3px black;
+            z-index: 20;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        #title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        #info {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #hotbar {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 20;
+        }
+
+        .slot {
+            width: 52px;
+            height: 52px;
+            border: 3px solid #555;
+            background: rgba(30, 30, 30, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slot.selected {
+            border-color: white;
+            transform: scale(1.08);
+        }
+
+        .slot-number {
+            position: absolute;
+            left: 3px;
+            top: 2px;
+            color: white;
+            font-size: 11px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .block-icon {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #222;
+        }
+
+        #startScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        #startBox {
+            width: min(90%, 500px);
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.92);
+            color: white;
+            text-align: center;
+            border: 2px solid #777;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        #startBox h1 {
+            margin-top: 0;
+            font-size: 34px;
+        }
+
+        #startButton {
+            border: none;
+            padding: 14px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #55aa55;
+            color: white;
+        }
+
+        #startButton:hover {
+            background: #66bb66;
+        }
+
+        #message {
+            position: fixed;
+            left: 50%;
+            top: 65%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 3px black;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 30;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="hud">
+    <div id="title">HTML Minecraft</div>
+    <div id="info">
+        WASD 이동 · Space 점프 · 좌클릭 파괴 · 우클릭 설치<br>
+        1~5 블록 선택 · ESC 마우스 해제
+    </div>
+</div>
+
+<div id="crosshair"></div>
+
+<div id="hotbar"></div>
+
+<div id="message"></div>
+
+<div id="startScreen">
+    <div id="startBox">
+        <h1>⛏️ HTML Minecraft</h1>
+        <p>브라우저에서 돌아가는 미니 마인크래프트</p>
+        <p>
+            WASD로 움직이고<br>
+            마우스로 주변을 둘러보세요.
+        </p>
+        <button id="startButton">게임 시작</button>
+    </div>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+"use strict";
+
+/* =========================================================
+   기본 설정
+========================================================= */
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x87ceeb);
+
+scene.fog = new THREE.Fog(
+    0x87ceeb,
+    30,
+    120
+);
+
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.05,
+    200
+);
+
+camera.position.set(0, 8, 12);
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: false
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.shadowMap.enabled = true;
+
+document.body.appendChild(renderer.domElement);
+
+
+/* =========================================================
+   조명
+========================================================= */
+
+const ambientLight = new THREE.AmbientLight(
+    0xffffff,
+    0.65
+);
+
+scene.add(ambientLight);
+
+const sun = new THREE.DirectionalLight(
+    0xffffff,
+    1.2
+);
+
+sun.position.set(
+    50,
+    100,
+    30
+);
+
+sun.castShadow = true;
+
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+
+scene.add(sun);
+
+
+/* =========================================================
+   블록 종류
+========================================================= */
+
+const BLOCKS = {
+    grass: {
+        name: "잔디",
+        color: 0x55aa35
+    },
+
+    dirt: {
+        name: "흙",
+        color: 0x8b5a2b
+    },
+
+    stone: {
+        name: "돌",
+        color: 0x888888
+    },
+
+    wood: {
+        name: "나무",
+        color: 0x8b5a2b
+    },
+
+    leaves: {
+        name: "나뭇잎",
+        color: 0x2f8f35
+    }
+};
+
+const blockTypes = [
+    "grass",
+    "dirt",
+    "stone",
+    "wood",
+    "leaves"
+];
+
+let selectedBlock = 0;
+
+
+/* =========================================================
+   블록 Geometry / Material
+========================================================= */
+
+const blockGeometry = new THREE.BoxGeometry(
+    1,
+    1,
+    1
+);
+
+const materials = {};
+
+for (const type of blockTypes) {
+
+    materials[type] =
+        new THREE.MeshLambertMaterial({
+            color: BLOCKS[type].color
+        });
+}
+
+
+/* =========================================================
+   월드 데이터
+========================================================= */
+
+const world = new Map();
+
+function key(x, y, z) {
+    return `${x},${y},${z}`;
+}
+
+function setBlock(x, y, z, type) {
+
+    const k = key(x, y, z);
+
+    if (type === null) {
+        world.delete(k);
+        return;
+    }
+
+    world.set(k, type);
+}
+
+function getBlock(x, y, z) {
+    return world.get(key(x, y, z));
+}
+
+
+/* =========================================================
+   Three.js 블록 생성
+========================================================= */
+
+const blockMeshes = new Map();
+
+function addBlockMesh(x, y, z, type) {
+
+    const mesh = new THREE.Mesh(
+        blockGeometry,
+        materials[type]
+    );
+
+    mesh.position.set(
+        x + 0.5,
+        y + 0.5,
+        z + 0.5
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    mesh.userData.x = x;
+    mesh.userData.y = y;
+    mesh.userData.z = z;
+    mesh.userData.type = type;
+
+    scene.add(mesh);
+
+    blockMeshes.set(
+        key(x, y, z),
+        mesh
+    );
+}
+
+function removeBlockMesh(x, y, z) {
+
+    const k = key(x, y, z);
+
+    const mesh = blockMeshes.get(k);
+
+    if (!mesh) return;
+
+    scene.remove(mesh);
+
+    blockMeshes.delete(k);
+}
+
+
+/* =========================================================
+   블록 설치/삭제
+========================================================= */
+
+function createBlock(x, y, z, type) {
+
+    if (getBlock(x, y, z) !== undefined) {
+        return false;
+    }
+
+    setBlock(x, y, z, type);
+    addBlockMesh(x, y, z, type);
+
+    return true;
+}
+
+function destroyBlock(x, y, z) {
+
+    if (getBlock(x, y, z) === undefined) {
+        return false;
+    }
+
+    setBlock(x, y, z, null);
+    removeBlockMesh(x, y, z);
+
+    return true;
+}
+
+
+/* =========================================================
+   지형 생성
+========================================================= */
+
+function terrainHeight(x, z) {
+
+    const h =
+        Math.sin(x * 0.22) * 1.2 +
+        Math.cos(z * 0.18) * 1.2 +
+        Math.sin((x + z) * 0.1) * 1.0;
+
+    return Math.floor(h + 3);
+}
+
+const WORLD_SIZE = 30;
+
+for (let x = -WORLD_SIZE; x <= WORLD_SIZE; x++) {
+
+    for (let z = -WORLD_SIZE; z <= WORLD_SIZE; z++) {
+
+        const height = terrainHeight(x, z);
+
+        for (let y = 0; y <= height; y++) {
+
+            let type;
+
+            if (y === height) {
+                type = "grass";
+            }
+            else if (y >= height - 2) {
+                type = "dirt";
+            }
+            else {
+                type = "stone";
+            }
+
+            createBlock(
+                x,
+                y,
+                z,
+                type
+            );
+        }
+    }
+}
+
+
+/* =========================================================
+   나무 생성
+========================================================= */
+
+function createTree(x, z) {
+
+    const ground = terrainHeight(x, z);
+
+    for (let y = ground + 1; y <= ground + 4; y++) {
+        createBlock(x, y, z, "wood");
+    }
+
+    for (let dx = -2; dx <= 2; dx++) {
+
+        for (let dz = -2; dz <= 2; dz++) {
+
+            for (let dy = 3; dy <= 5; dy++) {
+
+                const distance =
+                    Math.abs(dx) +
+                    Math.abs(dz);
+
+                if (
+                    distance <= 2 &&
+                    !(dx === 0 && dz === 0 && dy < 5)
+                ) {
+
+                    createBlock(
+                        x + dx,
+                        ground + dy,
+                        z + dz,
+                        "leaves"
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+/* 몇 그루 심기 */
+
+[
+    [-10, -8],
+    [-5, 7],
+    [8, -5],
+    [14, 10],
+    [-15, 12],
+    [10, 14],
+    [-18, -10]
+].forEach(pos => {
+    createTree(pos[0], pos[1]);
+});
+
+
+/* =========================================================
+   플레이어
+========================================================= */
+
+const player = {
+
+    position: new THREE.Vector3(
+        0,
+        8,
+        8
+    ),
+
+    velocity: new THREE.Vector3(),
+
+    width: 0.6,
+
+    height: 1.8,
+
+    speed: 5,
+
+    jumpPower: 8,
+
+    onGround: false
+};
+
+camera.position.copy(
+    player.position
+);
+
+camera.position.y += 1.6;
+
+
+/* =========================================================
+   키 입력
+========================================================= */
+
+const keys = {};
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        keys[event.code] = true;
+
+        if (
+            event.code === "Space" &&
+            player.onGround
+        ) {
+
+            player.velocity.y =
+                player.jumpPower;
+
+            player.onGround = false;
+        }
+
+        if (
+            event.code.startsWith("Digit")
+        ) {
+
+            const n =
+                Number(
+                    event.code.replace(
+                        "Digit",
+                        ""
+                    )
+                );
+
+            if (n >= 1 && n <= 5) {
+
+                selectedBlock =
+                    n - 1;
+
+                updateHotbar();
+            }
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    event => {
+        keys[event.code] = false;
+    }
+);
+
+
+/* =========================================================
+   마우스 시점
+========================================================= */
+
+let yaw = 0;
+let pitch = 0;
+
+const mouseSensitivity = 0.0025;
+
+document.addEventListener(
+    "mousemove",
+    event => {
+
+        if (
+            document.pointerLockElement !==
+            renderer.domElement
+        ) {
+            return;
+        }
+
+        yaw -=
+            event.movementX *
+            mouseSensitivity;
+
+        pitch -=
+            event.movementY *
+            mouseSensitivity;
+
+        const limit =
+            Math.PI / 2 - 0.01;
+
+        pitch =
+            Math.max(
+                -limit,
+                Math.min(
+                    limit,
+                    pitch
+                )
+            );
+    }
+);
+
+
+/* =========================================================
+   게임 시작
+========================================================= */
+
+const startScreen =
+    document.getElementById(
+        "startScreen"
+    );
+
+const startButton =
+    document.getElementById(
+        "startButton"
+    );
+
+startButton.addEventListener(
+    "click",
+    () => {
+
+        renderer.domElement.requestPointerLock();
+
+        startScreen.style.display =
+            "none";
+    }
+);
+
+document.addEventListener(
+    "pointerlockchange",
+    () => {
+
+        if (
+            document.pointerLockElement !==
+            renderer.domElement
+        ) {
+
+            startScreen.style.display =
+                "flex";
+        }
+    }
+);
+
+
+/* =========================================================
+   이동 / 충돌
+========================================================= */
+
+function isSolid(x, y, z) {
+
+    return getBlock(
+        Math.floor(x),
+        Math.floor(y),
+        Math.floor(z)
+    ) !== undefined;
+}
+
+function playerCollides(pos) {
+
+    const minX =
+        pos.x - player.width / 2;
+
+    const maxX =
+        pos.x + player.width / 2;
+
+    const minY =
+        pos.y;
+
+    const maxY =
+        pos.y + player.height;
+
+    const minZ =
+        pos.z - player.width / 2;
+
+    const maxZ =
+        pos.z + player.width / 2;
+
+    for (
+        let x = Math.floor(minX);
+        x <= Math.floor(maxX);
+        x++
+    ) {
+
+        for (
+            let y = Math.floor(minY);
+            y <= Math.floor(maxY);
+            y++
+        ) {
+
+            for (
+                let z = Math.floor(minZ);
+                z <= Math.floor(maxZ);
+                z++
+            ) {
+
+                if (
+                    isSolid(
+                        x,
+                        y,
+                        z
+                    )
+                ) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+function movePlayer(dx, dy, dz) {
+
+    const next =
+        player.position.clone();
+
+    next.x += dx;
+
+    if (
+        !playerCollides(next)
+    ) {
+        player.position.x =
+            next.x;
+    }
+
+    next.copy(player.position);
+
+    next.y += dy;
+
+    if (
+        !playerCollides(next)
+    ) {
+
+        player.position.y =
+            next.y;
+
+        player.onGround = false;
+
+    } else {
+
+        if (dy < 0) {
+            player.onGround = true;
+        }
+
+        player.velocity.y = 0;
+    }
+
+    next.copy(player.position);
+
+    next.z += dz;
+
+    if (
+        !playerCollides(next)
+    ) {
+        player.position.z =
+            next.z;
+    }
+}
+
+
+/* =========================================================
+   블록 Raycast
+========================================================= */
+
+const raycaster =
+    new THREE.Raycaster();
+
+raycaster.far = 7;
+
+const center =
+    new THREE.Vector2(
+        0,
+        0
+    );
+
+function getTargetBlock() {
+
+    raycaster.setFromCamera(
+        center,
+        camera
+    );
+
+    const objects =
+        Array.from(
+            blockMeshes.values()
+        );
+
+    const hits =
+        raycaster.intersectObjects(
+            objects,
+            false
+        );
+
+    if (hits.length === 0) {
+        return null;
+    }
+
+    return hits[0];
+}
+
+
+/* =========================================================
+   블록 파괴
+========================================================= */
+
+window.addEventListener(
+    "mousedown",
+    event => {
+
+        if (
+            document.pointerLockElement !==
+            renderer.domElement
+        ) {
+            return;
+        }
+
+        const hit =
+            getTargetBlock();
+
+        if (!hit) return;
+
+        const block =
+            hit.object;
+
+        const x =
+            block.userData.x;
+
+        const y =
+            block.userData.y;
+
+        const z =
+            block.userData.z;
+
+        /* 좌클릭 */
+
+        if (event.button === 0) {
+
+            /*
+             * 바닥 가장 아래 블록은
+             * 파괴하지 않도록 한다.
+             */
+            if (y <= 0) {
+                showMessage(
+                    "가장 아래 블록은 파괴할 수 없습니다!"
+                );
+                return;
+            }
+
+            destroyBlock(
+                x,
+                y,
+                z
+            );
+
+            showMessage("⛏️ 블록 파괴");
+        }
+
+        /* 우클릭 */
+
+        if (event.button === 2) {
+
+            const normal =
+                hit.face.normal.clone();
+
+            const newPosition =
+                block.position.clone()
+                    .subScalar(0.5)
+                    .add(normal);
+
+            const nx =
+                Math.floor(
+                    newPosition.x
+                );
+
+            const ny =
+                Math.floor(
+                    newPosition.y
+                );
+
+            const nz =
+                Math.floor(
+                    newPosition.z
+                );
+
+            /*
+             * 플레이어가 들어갈 위치에는
+             * 블록을 설치하지 않는다.
+             */
+
+            const testBlock =
+                new THREE.Vector3(
+                    nx + 0.5,
+                    ny + 0.5,
+                    nz + 0.5
+                );
+
+            const playerBox =
+                new THREE.Box3(
+                    new THREE.Vector3(
+                        player.position.x -
+                            player.width / 2,
+                        player.position.y,
+                        player.position.z -
+                            player.width / 2
+                    ),
+                    new THREE.Vector3(
+                        player.position.x +
+                            player.width / 2,
+                        player.position.y +
+                            player.height,
+                        player.position.z +
+                            player.width / 2
+                    )
+                );
+
+            const blockBox =
+                new THREE.Box3().setFromCenterAndSize(
+                    testBlock,
+                    new THREE.Vector3(
+                        1,
+                        1,
+                        1
+                    )
+                );
+
+            if (
+                playerBox.intersectsBox(
+                    blockBox
+                )
+            ) {
+                return;
+            }
+
+            if (
+                createBlock(
+                    nx,
+                    ny,
+                    nz,
+                    blockTypes[selectedBlock]
+                )
+            ) {
+
+                showMessage(
+                    "🧱 " +
+                    BLOCKS[
+                        blockTypes[selectedBlock]
+                    ].name +
+                    " 설치"
+                );
+            }
+        }
+    }
+);
+
+
+/* 우클릭 메뉴 방지 */
+
+window.addEventListener(
+    "contextmenu",
+    event => {
+        event.preventDefault();
+    }
+);
+
+
+/* =========================================================
+   핫바
+========================================================= */
+
+const hotbar =
+    document.getElementById(
+        "hotbar"
+    );
+
+function updateHotbar() {
+
+    hotbar.innerHTML = "";
+
+    blockTypes.forEach(
+        (type, index) => {
+
+            const slot =
+                document.createElement(
+                    "div"
+                );
+
+            slot.className =
+                "slot";
+
+            if (
+                index === selectedBlock
+            ) {
+                slot.classList.add(
+                    "selected"
+                );
+            }
+
+            const number =
+                document.createElement(
+                    "div"
+                );
+
+            number.className =
+                "slot-number";
+
+            number.textContent =
+                index + 1;
+
+            const icon =
+                document.createElement(
+                    "div"
+                );
+
+            icon.className =
+                "block-icon";
+
+            icon.style.background =
+                "#" +
+                BLOCKS[type]
+                    .color
+                    .toString(16)
+                    .padStart(
+                        6,
+                        "0"
+                    );
+
+            slot.appendChild(number);
+            slot.appendChild(icon);
+
+            hotbar.appendChild(slot);
+        }
+    );
+}
+
+updateHotbar();
+
+
+/* =========================================================
+   메시지
+========================================================= */
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+let messageTimer = null;
+
+function showMessage(text) {
+
+    message.textContent =
+        text;
+
+    message.style.opacity =
+        "1";
+
+    clearTimeout(
+        messageTimer
+    );
+
+    messageTimer =
+        setTimeout(
+            () => {
+
+                message.style.opacity =
+                    "0";
+
+            },
+            1000
+        );
+}
+
+
+/* =========================================================
+   게임 루프
+========================================================= */
+
+let lastTime =
+    performance.now();
+
+function gameLoop(now) {
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+    let delta =
+        (now - lastTime) / 1000;
+
+    lastTime = now;
+
+    /*
+     * 너무 긴 프레임 방지
+     */
+    delta =
+        Math.min(
+            delta,
+            0.05
+        );
+
+    /* ---------------------------------
+       마우스 방향
+    --------------------------------- */
+
+    camera.rotation.order =
+        "YXZ";
+
+    camera.rotation.y =
+        yaw;
+
+    camera.rotation.x =
+        pitch;
+
+
+    /* ---------------------------------
+       이동 방향
+    --------------------------------- */
+
+    let forward = 0;
+    let strafe = 0;
+
+    if (keys["KeyW"]) {
+        forward += 1;
+    }
+
+    if (keys["KeyS"]) {
+        forward -= 1;
+    }
+
+    if (keys["KeyA"]) {
+        strafe -= 1;
+    }
+
+    if (keys["KeyD"]) {
+        strafe += 1;
+    }
+
+    const length =
+        Math.sqrt(
+            forward * forward +
+            strafe * strafe
+        );
+
+    if (length > 0) {
+
+        forward /= length;
+        strafe /= length;
+    }
+
+    /*
+     * 카메라가 보는 방향을
+     * 이동 방향으로 변환
+     */
+
+    const moveX =
+        (
+            Math.sin(yaw) *
+            forward
+        ) +
+        (
+            Math.cos(yaw) *
+            strafe
+        );
+
+    const moveZ =
+        (
+            Math.cos(yaw) *
+            forward
+        ) -
+        (
+            Math.sin(yaw) *
+            strafe
+        );
+
+    movePlayer(
+        moveX *
+            player.speed *
+            delta,
+
+        0,
+
+        moveZ *
+            player.speed *
+            delta
+    );
+
+
+    /* ---------------------------------
+       중력
+    --------------------------------- */
+
+    player.velocity.y -=
+        20 * delta;
+
+    /*
+     * Y 이동
+     */
+
+    movePlayer(
+        0,
+        player.velocity.y * delta,
+        0
+    );
+
+
+    /* ---------------------------------
+       낙사 방지
+    --------------------------------- */
+
+    if (
+        player.position.y < -10
+    ) {
+
+        player.position.set(
+            0,
+            10,
+            8
+        );
+
+        player.velocity.set(
+            0,
+            0,
+            0
+        );
+    }
+
+
+    /* ---------------------------------
+       카메라
+    --------------------------------- */
+
+    camera.position.set(
+        player.position.x,
+        player.position.y + 1.6,
+        player.position.z
+    );
+
+
+    /* ---------------------------------
+       렌더링
+    --------------------------------- */
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+requestAnimationFrame(
+    gameLoop
+);
+
+
+/* =========================================================
+   창 크기 변경
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+    }
+);
+
+</script>
+
+</body>
+</html>
