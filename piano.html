@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tone Piano</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/tone@15.1.22/build/Tone.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #181818;
+            color: white;
+            font-family: Arial, sans-serif;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .piano-container {
+            width: min(900px, 95vw);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        #status {
+            color: #aaa;
+            margin-bottom: 25px;
+        }
+
+        .piano {
+            position: relative;
+            display: flex;
+            height: 300px;
+            user-select: none;
+        }
+
+        .white-key {
+            position: relative;
+            flex: 1;
+
+            background: #fafafa;
+            border: 1px solid #222;
+            border-radius: 0 0 8px 8px;
+
+            color: #222;
+
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+
+            padding-bottom: 20px;
+
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .white-key.active {
+            background: #ccc;
+            transform: translateY(3px);
+        }
+
+        .black-key {
+            position: absolute;
+
+            width: 7%;
+            height: 180px;
+
+            background: #111;
+            border-radius: 0 0 6px 6px;
+
+            color: white;
+
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+
+            padding-bottom: 15px;
+
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .black-key.active {
+            background: #444;
+            transform: translateY(3px);
+        }
+
+        .controls {
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="piano-container">
+
+    <h1>🎹 Tone Piano</h1>
+
+    <div id="status">
+        아무 건반이나 눌러보세요
+    </div>
+
+    <div class="piano">
+
+        <!-- White keys -->
+        <div class="white-key" data-note="C4" data-key="a">C4<br>A</div>
+        <div class="white-key" data-note="D4" data-key="s">D4<br>S</div>
+        <div class="white-key" data-note="E4" data-key="d">E4<br>D</div>
+        <div class="white-key" data-note="F4" data-key="f">F4<br>F</div>
+        <div class="white-key" data-note="G4" data-key="g">G4<br>G</div>
+        <div class="white-key" data-note="A4" data-key="h">A4<br>H</div>
+        <div class="white-key" data-note="B4" data-key="j">B4<br>J</div>
+        <div class="white-key" data-note="C5" data-key="k">C5<br>K</div>
+
+        <!-- Black keys -->
+        <div class="black-key" data-note="C#4" data-key="w" style="left: 8.5%;">C#4<br>W</div>
+        <div class="black-key" data-note="D#4" data-key="e" style="left: 21%;">D#4<br>E</div>
+
+        <div class="black-key" data-note="F#4" data-key="t" style="left: 46%;">F#4<br>T</div>
+        <div class="black-key" data-note="G#4" data-key="y" style="left: 58.5%;">G#4<br>Y</div>
+        <div class="black-key" data-note="A#4" data-key="u" style="left: 71%;">A#4<br>U</div>
+
+    </div>
+
+    <div class="controls">
+        <button id="startButton">🔊 Audio 시작</button>
+    </div>
+
+</div>
+
+<script>
+    const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+
+    const activeNotes = new Set();
+
+    const keys = document.querySelectorAll(".white-key, .black-key");
+    const status = document.getElementById("status");
+    const startButton = document.getElementById("startButton");
+
+    // Audio 시작
+    startButton.addEventListener("click", async () => {
+        await Tone.start();
+
+        status.textContent = "🎵 준비 완료!";
+        startButton.textContent = "Audio 활성화됨";
+        startButton.disabled = true;
+    });
+
+    function playNote(element) {
+        const note = element.dataset.note;
+
+        if (activeNotes.has(note)) {
+            return;
+        }
+
+        activeNotes.add(note);
+
+        synth.triggerAttack(note);
+
+        element.classList.add("active");
+
+        status.textContent = "♪ " + note;
+    }
+
+    function stopNote(element) {
+        const note = element.dataset.note;
+
+        if (!activeNotes.has(note)) {
+            return;
+        }
+
+        activeNotes.delete(note);
+
+        synth.triggerRelease(note);
+
+        element.classList.remove("active");
+    }
+
+    // 마우스
+    keys.forEach(key => {
+
+        key.addEventListener("mousedown", async () => {
+            await Tone.start();
+            playNote(key);
+        });
+
+        key.addEventListener("mouseup", () => {
+            stopNote(key);
+        });
+
+        key.addEventListener("mouseleave", () => {
+            stopNote(key);
+        });
+
+        // 모바일
+        key.addEventListener("touchstart", async event => {
+            event.preventDefault();
+
+            await Tone.start();
+            playNote(key);
+        });
+
+        key.addEventListener("touchend", event => {
+            event.preventDefault();
+            stopNote(key);
+        });
+    });
+
+    // PC 키보드
+    document.addEventListener("keydown", async event => {
+
+        if (event.repeat) {
+            return;
+        }
+
+        const key = event.key.toLowerCase();
+
+        const pianoKey = document.querySelector(
+            `[data-key="${key}"]`
+        );
+
+        if (!pianoKey) {
+            return;
+        }
+
+        await Tone.start();
+
+        playNote(pianoKey);
+    });
+
+    document.addEventListener("keyup", event => {
+
+        const key = event.key.toLowerCase();
+
+        const pianoKey = document.querySelector(
+            `[data-key="${key}"]`
+        );
+
+        if (!pianoKey) {
+            return;
+        }
+
+        stopNote(pianoKey);
+    });
+</script>
+
+</body>
+</html>
