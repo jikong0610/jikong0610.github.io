@@ -1,240 +1,430 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Minecraft</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<title>HTML Minecraft v2</title>
 
-        html, body {
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background: #87ceeb;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        canvas {
-            display: block;
-        }
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #87ceeb;
+    font-family: Arial, sans-serif;
+}
 
-        #crosshair {
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            width: 18px;
-            height: 18px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 10;
-        }
+canvas {
+    display: block;
+}
 
-        #crosshair::before,
-        #crosshair::after {
-            content: "";
-            position: absolute;
-            background: white;
-            box-shadow: 0 0 2px black;
-        }
+#crosshair {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 20;
+}
 
-        #crosshair::before {
-            width: 2px;
-            height: 18px;
-            left: 8px;
-            top: 0;
-        }
+#crosshair::before,
+#crosshair::after {
+    content: "";
+    position: absolute;
+    background: white;
+    box-shadow:
+        1px 1px 2px black,
+        -1px -1px 2px black;
+}
 
-        #crosshair::after {
-            width: 18px;
-            height: 2px;
-            left: 0;
-            top: 8px;
-        }
+#crosshair::before {
+    width: 2px;
+    height: 20px;
+    left: 9px;
+    top: 0;
+}
 
-        #hud {
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            color: white;
-            text-shadow: 2px 2px 3px black;
-            z-index: 20;
-            user-select: none;
-            pointer-events: none;
-        }
+#crosshair::after {
+    width: 20px;
+    height: 2px;
+    left: 0;
+    top: 9px;
+}
 
-        #title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
+#hud {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    color: white;
+    text-shadow: 2px 2px 3px black;
+    z-index: 30;
+    pointer-events: none;
+    user-select: none;
+}
 
-        #info {
-            font-size: 14px;
-            line-height: 1.5;
-        }
+#title {
+    font-size: 23px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
 
-        #hotbar {
-            position: fixed;
-            left: 50%;
-            bottom: 18px;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 5px;
-            z-index: 20;
-        }
+#info {
+    font-size: 13px;
+    line-height: 1.5;
+}
 
-        .slot {
-            width: 52px;
-            height: 52px;
-            border: 3px solid #555;
-            background: rgba(30, 30, 30, 0.75);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+#coords {
+    margin-top: 5px;
+    font-family: monospace;
+    font-size: 12px;
+}
 
-        .slot.selected {
-            border-color: white;
-            transform: scale(1.08);
-        }
+#hotbar {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 30;
+}
 
-        .slot-number {
-            position: absolute;
-            left: 3px;
-            top: 2px;
-            color: white;
-            font-size: 11px;
-            text-shadow: 1px 1px 2px black;
-        }
+.slot {
+    width: 54px;
+    height: 54px;
 
-        .block-icon {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #222;
-        }
+    border:
+        3px solid
+        #555;
 
-        #startScreen {
-            position: fixed;
-            inset: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.45);
-        }
+    background:
+        rgba(25, 25, 25, 0.8);
 
-        #startBox {
-            width: min(90%, 500px);
-            padding: 30px;
-            background: rgba(20, 20, 20, 0.92);
-            color: white;
-            text-align: center;
-            border: 2px solid #777;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
+    position: relative;
 
-        #startBox h1 {
-            margin-top: 0;
-            font-size: 34px;
-        }
+    display:
+        flex;
 
-        #startButton {
-            border: none;
-            padding: 14px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            background: #55aa55;
-            color: white;
-        }
+    align-items:
+        center;
 
-        #startButton:hover {
-            background: #66bb66;
-        }
+    justify-content:
+        center;
+}
 
-        #message {
-            position: fixed;
-            left: 50%;
-            top: 65%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            text-shadow: 2px 2px 3px black;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 30;
-        }
-    </style>
+.slot.selected {
+    border-color: white;
+    transform: scale(1.08);
+}
+
+.slot-number {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+
+    color: white;
+    font-size: 11px;
+
+    text-shadow:
+        1px 1px 2px black;
+}
+
+.block-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+
+    border:
+        1px solid
+        #111;
+}
+
+#message {
+    position: fixed;
+
+    left: 50%;
+    top: 64%;
+
+    transform:
+        translate(-50%, -50%);
+
+    color: white;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    text-shadow:
+        2px 2px 3px black;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    transition:
+        opacity 0.15s;
+
+    z-index: 40;
+}
+
+#breakBar {
+    position: fixed;
+
+    left: 50%;
+    top: calc(50% + 25px);
+
+    transform:
+        translateX(-50%);
+
+    width: 160px;
+    height: 12px;
+
+    background:
+        rgba(0,0,0,0.6);
+
+    border:
+        2px solid
+        white;
+
+    display: none;
+
+    z-index: 40;
+}
+
+#breakProgress {
+    width: 0%;
+    height: 100%;
+    background: white;
+}
+
+#startScreen {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 100;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    background:
+        rgba(0,0,0,0.5);
+}
+
+#startBox {
+    width: min(90%, 520px);
+
+    padding:
+        30px;
+
+    background:
+        rgba(20,20,20,0.94);
+
+    color: white;
+
+    text-align:
+        center;
+
+    border:
+        2px solid
+        #777;
+
+    box-shadow:
+        0 15px 50px
+        rgba(0,0,0,0.6);
+}
+
+#startBox h1 {
+    margin:
+        0 0 15px 0;
+
+    font-size: 36px;
+}
+
+#startBox p {
+    line-height: 1.6;
+}
+
+#startButton {
+    border: none;
+
+    padding:
+        14px 34px;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    color: white;
+
+    background:
+        #4caf50;
+
+    cursor: pointer;
+}
+
+#startButton:hover {
+    background:
+        #5fc463;
+}
+
+#saveButton {
+    margin-top: 10px;
+
+    padding:
+        9px 18px;
+
+    border: none;
+
+    background:
+        #555;
+
+    color: white;
+
+    cursor: pointer;
+}
+
+#saveButton:hover {
+    background:
+        #666;
+}
+
+#loading {
+    position: fixed;
+    inset: 0;
+
+    z-index: 200;
+
+    background:
+        #111;
+
+    color: white;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    font-size: 22px;
+}
+</style>
 </head>
 
 <body>
 
+<div id="loading">
+    HTML Minecraft v2 로딩 중...
+</div>
+
 <div id="hud">
-    <div id="title">HTML Minecraft</div>
-    <div id="info">
-        WASD 이동 · Space 점프 · 좌클릭 파괴 · 우클릭 설치<br>
-        1~5 블록 선택 · ESC 마우스 해제
+
+    <div id="title">
+        HTML Minecraft v2
     </div>
+
+    <div id="info">
+        WASD 이동 · Shift 달리기 · Space 점프<br>
+        좌클릭 채굴 · 우클릭 설치 · 1~5 선택 · ESC 해제
+    </div>
+
+    <div id="coords">
+        XYZ: 0 / 0 / 0
+    </div>
+
 </div>
 
 <div id="crosshair"></div>
 
-<div id="hotbar"></div>
+<div id="breakBar">
+    <div id="breakProgress"></div>
+</div>
 
 <div id="message"></div>
 
+<div id="hotbar"></div>
+
 <div id="startScreen">
+
     <div id="startBox">
-        <h1>⛏️ HTML Minecraft</h1>
-        <p>브라우저에서 돌아가는 미니 마인크래프트</p>
+
+        <h1>
+            ⛏️ HTML Minecraft
+        </h1>
+
         <p>
-            WASD로 움직이고<br>
-            마우스로 주변을 둘러보세요.
+            브라우저에서 실행되는<br>
+            미니 마인크래프트 v2
         </p>
-        <button id="startButton">게임 시작</button>
+
+        <p>
+            텍스처 · 지형 · 나무 · 물 · 낮밤<br>
+            채굴 · 설치 · 저장 기능 포함
+        </p>
+
+        <button id="startButton">
+            게임 시작
+        </button>
+
+        <br>
+
+        <button id="saveButton">
+            월드 저장
+        </button>
+
     </div>
+
 </div>
 
-<!-- Three.js -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
-"use strict";
 
 /* =========================================================
-   기본 설정
+   HTML MINECRAFT v2
 ========================================================= */
 
-const scene = new THREE.Scene();
+"use strict";
 
-scene.background = new THREE.Color(0x87ceeb);
 
-scene.fog = new THREE.Fog(
-    0x87ceeb,
-    30,
-    120
-);
+/* =========================================================
+   THREE.JS
+========================================================= */
 
-const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.05,
-    200
-);
+const scene =
+    new THREE.Scene();
 
-camera.position.set(0, 8, 12);
+const camera =
+    new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth /
+        window.innerHeight,
+        0.05,
+        250
+    );
 
-const renderer = new THREE.WebGLRenderer({
-    antialias: false
-});
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: false
+    });
 
 renderer.setSize(
     window.innerWidth,
@@ -242,76 +432,426 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 renderer.shadowMap.enabled = true;
 
-document.body.appendChild(renderer.domElement);
+renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+
+document.body.appendChild(
+    renderer.domElement
+);
 
 
 /* =========================================================
-   조명
+   SKY
 ========================================================= */
 
-const ambientLight = new THREE.AmbientLight(
-    0xffffff,
-    0.65
+scene.background =
+    new THREE.Color(
+        0x87ceeb
+    );
+
+scene.fog =
+    new THREE.Fog(
+        0x87ceeb,
+        35,
+        150
+    );
+
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+const ambient =
+    new THREE.AmbientLight(
+        0xffffff,
+        0.65
+    );
+
+scene.add(
+    ambient
 );
 
-scene.add(ambientLight);
-
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    1.2
-);
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        1.2
+    );
 
 sun.position.set(
     50,
     100,
-    30
+    40
 );
 
 sun.castShadow = true;
 
-sun.shadow.mapSize.width = 2048;
-sun.shadow.mapSize.height = 2048;
+sun.shadow.mapSize.width =
+    2048;
 
-scene.add(sun);
+sun.shadow.mapSize.height =
+    2048;
+
+sun.shadow.camera.left =
+    -80;
+
+sun.shadow.camera.right =
+    80;
+
+sun.shadow.camera.top =
+    80;
+
+sun.shadow.camera.bottom =
+    -80;
+
+scene.add(
+    sun
+);
 
 
 /* =========================================================
-   블록 종류
+   PIXEL TEXTURE GENERATOR
+========================================================= */
+
+function makeTexture(
+    base,
+    spots,
+    seed
+) {
+
+    const size = 16;
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+    canvas.width =
+        size;
+
+    canvas.height =
+        size;
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+    ctx.fillStyle =
+        base;
+
+    ctx.fillRect(
+        0,
+        0,
+        size,
+        size
+    );
+
+    let value =
+        seed;
+
+    function random() {
+
+        value =
+            (
+                value *
+                1664525 +
+                1013904223
+            ) >>> 0;
+
+        return value /
+            4294967296;
+    }
+
+    for (
+        let i = 0;
+        i < 70;
+        i++
+    ) {
+
+        const x =
+            Math.floor(
+                random() * size
+            );
+
+        const y =
+            Math.floor(
+                random() * size
+            );
+
+        const color =
+            spots[
+                Math.floor(
+                    random() *
+                    spots.length
+                )
+            ];
+
+        ctx.fillStyle =
+            color;
+
+        ctx.fillRect(
+            x,
+            y,
+            1,
+            1
+        );
+    }
+
+    const texture =
+        new THREE.CanvasTexture(
+            canvas
+        );
+
+    texture.magFilter =
+        THREE.NearestFilter;
+
+    texture.minFilter =
+        THREE.NearestFilter;
+
+    texture.colorSpace =
+        THREE.SRGBColorSpace;
+
+    return texture;
+}
+
+
+/* =========================================================
+   SPECIAL TEXTURES
+========================================================= */
+
+const textures = {};
+
+
+/* grass top */
+
+textures.grassTop =
+    makeTexture(
+        "#55aa35",
+        [
+            "#44952d",
+            "#66b83d",
+            "#3f8f2c",
+            "#73bd45"
+        ],
+        123
+    );
+
+
+/* grass side */
+
+textures.grassSide =
+    makeTexture(
+        "#8b5a2b",
+        [
+            "#765024",
+            "#9a6632",
+            "#6f481f",
+            "#55aa35"
+        ],
+        321
+    );
+
+
+/* dirt */
+
+textures.dirt =
+    makeTexture(
+        "#8b5a2b",
+        [
+            "#765024",
+            "#9a6632",
+            "#6f481f",
+            "#a16b36"
+        ],
+        555
+    );
+
+
+/* stone */
+
+textures.stone =
+    makeTexture(
+        "#888888",
+        [
+            "#777777",
+            "#999999",
+            "#6f6f6f",
+            "#aaaaaa"
+        ],
+        777
+    );
+
+
+/* wood */
+
+textures.wood =
+    makeTexture(
+        "#9a672f",
+        [
+            "#7c4d24",
+            "#b27a3b",
+            "#6d421f",
+            "#c18845"
+        ],
+        888
+    );
+
+
+/* leaves */
+
+textures.leaves =
+    makeTexture(
+        "#328f38",
+        [
+            "#26752d",
+            "#3fa947",
+            "#1f6928",
+            "#50b956"
+        ],
+        999
+    );
+
+
+/* sand */
+
+textures.sand =
+    makeTexture(
+        "#d8c27a",
+        [
+            "#c9b36e",
+            "#e5d08b",
+            "#bba462"
+        ],
+        111
+    );
+
+
+/* water */
+
+textures.water =
+    makeTexture(
+        "#3b9ed0",
+        [
+            "#2589bd",
+            "#55b2dc",
+            "#2d8fbe"
+        ],
+        222
+    );
+
+
+/* =========================================================
+   MATERIALS
+========================================================= */
+
+const materials = {};
+
+materials.grassTop =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.grassTop
+    });
+
+materials.grassSide =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.grassSide
+    });
+
+materials.dirt =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.dirt
+    });
+
+materials.stone =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.stone
+    });
+
+materials.wood =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.wood
+    });
+
+materials.leaves =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.leaves,
+        transparent: true,
+        opacity: 0.95
+    });
+
+materials.sand =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.sand
+    });
+
+materials.water =
+    new THREE.MeshLambertMaterial({
+        map:
+            textures.water,
+        transparent: true,
+        opacity: 0.65
+    });
+
+
+/* =========================================================
+   BLOCK DEFINITIONS
 ========================================================= */
 
 const BLOCKS = {
+
     grass: {
         name: "잔디",
-        color: 0x55aa35
+        hardness: 0.35
     },
 
     dirt: {
         name: "흙",
-        color: 0x8b5a2b
+        hardness: 0.30
     },
 
     stone: {
         name: "돌",
-        color: 0x888888
+        hardness: 1.00
     },
 
     wood: {
         name: "나무",
-        color: 0x8b5a2b
+        hardness: 0.70
     },
 
     leaves: {
         name: "나뭇잎",
-        color: 0x2f8f35
+        hardness: 0.15
+    },
+
+    sand: {
+        name: "모래",
+        hardness: 0.25
+    },
+
+    water: {
+        name: "물",
+        hardness: Infinity,
+        liquid: true
     }
+
 };
 
-const blockTypes = [
+const hotbarTypes = [
     "grass",
     "dirt",
     "stone",
@@ -319,69 +859,153 @@ const blockTypes = [
     "leaves"
 ];
 
-let selectedBlock = 0;
+
+/* =========================================================
+   BLOCK GEOMETRY
+========================================================= */
+
+const cubeGeometry =
+    new THREE.BoxGeometry(
+        1,
+        1,
+        1
+    );
 
 
 /* =========================================================
-   블록 Geometry / Material
+   WORLD
 ========================================================= */
 
-const blockGeometry = new THREE.BoxGeometry(
-    1,
-    1,
-    1
-);
+const world =
+    new Map();
 
-const materials = {};
+const meshes =
+    new Map();
 
-for (const type of blockTypes) {
+function worldKey(
+    x,
+    y,
+    z
+) {
 
-    materials[type] =
-        new THREE.MeshLambertMaterial({
-            color: BLOCKS[type].color
-        });
+    return (
+        x + "," +
+        y + "," +
+        z
+    );
+}
+
+function getBlock(
+    x,
+    y,
+    z
+) {
+
+    return world.get(
+        worldKey(
+            x,
+            y,
+            z
+        )
+    );
+}
+
+function setBlock(
+    x,
+    y,
+    z,
+    type
+) {
+
+    world.set(
+        worldKey(
+            x,
+            y,
+            z
+        ),
+        type
+    );
+}
+
+function deleteBlock(
+    x,
+    y,
+    z
+) {
+
+    world.delete(
+        worldKey(
+            x,
+            y,
+            z
+        )
+    );
 }
 
 
 /* =========================================================
-   월드 데이터
+   BLOCK MATERIAL
 ========================================================= */
 
-const world = new Map();
+function getMaterials(
+    type
+) {
 
-function key(x, y, z) {
-    return `${x},${y},${z}`;
-}
+    if (
+        type === "grass"
+    ) {
 
-function setBlock(x, y, z, type) {
-
-    const k = key(x, y, z);
-
-    if (type === null) {
-        world.delete(k);
-        return;
+        return [
+            materials.grassSide,
+            materials.grassSide,
+            materials.grassTop,
+            materials.dirt,
+            materials.grassSide,
+            materials.grassSide
+        ];
     }
 
-    world.set(k, type);
-}
+    if (
+        type === "wood"
+    ) {
 
-function getBlock(x, y, z) {
-    return world.get(key(x, y, z));
+        return [
+            materials.wood,
+            materials.wood,
+            materials.wood,
+            materials.wood,
+            materials.wood,
+            materials.wood
+        ];
+    }
+
+    return [
+        materials[type],
+        materials[type],
+        materials[type],
+        materials[type],
+        materials[type],
+        materials[type]
+    ];
 }
 
 
 /* =========================================================
-   Three.js 블록 생성
+   ADD MESH
 ========================================================= */
 
-const blockMeshes = new Map();
+function addMesh(
+    x,
+    y,
+    z,
+    type
+) {
 
-function addBlockMesh(x, y, z, type) {
-
-    const mesh = new THREE.Mesh(
-        blockGeometry,
-        materials[type]
-    );
+    const mesh =
+        new THREE.Mesh(
+            cubeGeometry,
+            getMaterials(type)
+        );
 
     mesh.position.set(
         x + 0.5,
@@ -389,106 +1013,342 @@ function addBlockMesh(x, y, z, type) {
         z + 0.5
     );
 
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    mesh.castShadow =
+        type !== "water";
 
-    mesh.userData.x = x;
-    mesh.userData.y = y;
-    mesh.userData.z = z;
-    mesh.userData.type = type;
+    mesh.receiveShadow =
+        true;
 
-    scene.add(mesh);
+    mesh.userData = {
+        x: x,
+        y: y,
+        z: z,
+        type: type
+    };
 
-    blockMeshes.set(
-        key(x, y, z),
+    scene.add(
+        mesh
+    );
+
+    meshes.set(
+        worldKey(
+            x,
+            y,
+            z
+        ),
         mesh
     );
 }
 
-function removeBlockMesh(x, y, z) {
 
-    const k = key(x, y, z);
+/* =========================================================
+   REMOVE MESH
+========================================================= */
 
-    const mesh = blockMeshes.get(k);
+function removeMesh(
+    x,
+    y,
+    z
+) {
 
-    if (!mesh) return;
+    const k =
+        worldKey(
+            x,
+            y,
+            z
+        );
 
-    scene.remove(mesh);
+    const mesh =
+        meshes.get(k);
 
-    blockMeshes.delete(k);
+    if (!mesh) {
+        return;
+    }
+
+    scene.remove(
+        mesh
+    );
+
+    meshes.delete(k);
 }
 
 
 /* =========================================================
-   블록 설치/삭제
+   CREATE BLOCK
 ========================================================= */
 
-function createBlock(x, y, z, type) {
+function createBlock(
+    x,
+    y,
+    z,
+    type
+) {
 
-    if (getBlock(x, y, z) !== undefined) {
+    if (
+        getBlock(
+            x,
+            y,
+            z
+        ) !== undefined
+    ) {
         return false;
     }
 
-    setBlock(x, y, z, type);
-    addBlockMesh(x, y, z, type);
+    setBlock(
+        x,
+        y,
+        z,
+        type
+    );
 
-    return true;
-}
-
-function destroyBlock(x, y, z) {
-
-    if (getBlock(x, y, z) === undefined) {
-        return false;
-    }
-
-    setBlock(x, y, z, null);
-    removeBlockMesh(x, y, z);
+    addMesh(
+        x,
+        y,
+        z,
+        type
+    );
 
     return true;
 }
 
 
 /* =========================================================
-   지형 생성
+   DESTROY BLOCK
 ========================================================= */
 
-function terrainHeight(x, z) {
+function destroyBlock(
+    x,
+    y,
+    z
+) {
 
-    const h =
-        Math.sin(x * 0.22) * 1.2 +
-        Math.cos(z * 0.18) * 1.2 +
-        Math.sin((x + z) * 0.1) * 1.0;
+    if (
+        getBlock(
+            x,
+            y,
+            z
+        ) === undefined
+    ) {
+        return false;
+    }
 
-    return Math.floor(h + 3);
+    deleteBlock(
+        x,
+        y,
+        z
+    );
+
+    removeMesh(
+        x,
+        y,
+        z
+    );
+
+    return true;
 }
 
-const WORLD_SIZE = 30;
 
-for (let x = -WORLD_SIZE; x <= WORLD_SIZE; x++) {
+/* =========================================================
+   TERRAIN NOISE
+========================================================= */
 
-    for (let z = -WORLD_SIZE; z <= WORLD_SIZE; z++) {
+function terrainHeight(
+    x,
+    z
+) {
 
-        const height = terrainHeight(x, z);
+    const a =
+        Math.sin(
+            x * 0.16
+        ) * 2;
 
-        for (let y = 0; y <= height; y++) {
+    const b =
+        Math.cos(
+            z * 0.13
+        ) * 2;
 
-            let type;
+    const c =
+        Math.sin(
+            (x + z) *
+            0.08
+        ) * 1.5;
 
-            if (y === height) {
-                type = "grass";
+    const d =
+        Math.cos(
+            (x - z) *
+            0.05
+        ) * 1.5;
+
+    return Math.max(
+        1,
+        Math.floor(
+            5 +
+            a +
+            b +
+            c +
+            d
+        )
+    );
+}
+
+
+/* =========================================================
+   WORLD GENERATION
+========================================================= */
+
+const WORLD_SIZE = 32;
+
+function generateWorld() {
+
+    world.clear();
+
+    for (
+        const mesh of meshes.values()
+    ) {
+
+        scene.remove(
+            mesh
+        );
+    }
+
+    meshes.clear();
+
+    for (
+        let x = -WORLD_SIZE;
+        x <= WORLD_SIZE;
+        x++
+    ) {
+
+        for (
+            let z = -WORLD_SIZE;
+            z <= WORLD_SIZE;
+            z++
+        ) {
+
+            const height =
+                terrainHeight(
+                    x,
+                    z
+                );
+
+            for (
+                let y = 0;
+                y <= height;
+                y++
+            ) {
+
+                let type;
+
+                if (
+                    y === height
+                ) {
+
+                    type =
+                        "grass";
+
+                }
+                else if (
+                    y >=
+                    height - 2
+                ) {
+
+                    type =
+                        "dirt";
+
+                }
+                else {
+
+                    type =
+                        "stone";
+                }
+
+                createBlock(
+                    x,
+                    y,
+                    z,
+                    type
+                );
             }
-            else if (y >= height - 2) {
-                type = "dirt";
-            }
-            else {
-                type = "stone";
-            }
+        }
+    }
 
-            createBlock(
+
+    /* 물 */
+
+    const WATER_LEVEL = 4;
+
+    for (
+        let x = -WORLD_SIZE;
+        x <= WORLD_SIZE;
+        x++
+    ) {
+
+        for (
+            let z = -WORLD_SIZE;
+            z <= WORLD_SIZE;
+            z++
+        ) {
+
+            const height =
+                terrainHeight(
+                    x,
+                    z
+                );
+
+            if (
+                height <
+                WATER_LEVEL
+            ) {
+
+                for (
+                    let y =
+                        height + 1;
+                    y <= WATER_LEVEL;
+                    y++
+                ) {
+
+                    createBlock(
+                        x,
+                        y,
+                        z,
+                        "water"
+                    );
+                }
+            }
+        }
+    }
+
+
+    /* 나무 */
+
+    const trees = [
+        [-20, -15],
+        [-15, 12],
+        [-8, -5],
+        [-4, 17],
+        [4, -16],
+        [10, -6],
+        [15, 12],
+        [21, -10],
+        [22, 18],
+        [-23, 7],
+        [5, 22]
+    ];
+
+    for (
+        const [x, z] of trees
+    ) {
+
+        if (
+            Math.abs(x) <=
+            WORLD_SIZE &&
+            Math.abs(z) <=
+            WORLD_SIZE
+        ) {
+
+            createTree(
                 x,
-                y,
-                z,
-                type
+                z
             );
         }
     }
@@ -496,22 +1356,60 @@ for (let x = -WORLD_SIZE; x <= WORLD_SIZE; x++) {
 
 
 /* =========================================================
-   나무 생성
+   TREE
 ========================================================= */
 
-function createTree(x, z) {
+function createTree(
+    x,
+    z
+) {
 
-    const ground = terrainHeight(x, z);
+    const ground =
+        terrainHeight(
+            x,
+            z
+        );
 
-    for (let y = ground + 1; y <= ground + 4; y++) {
-        createBlock(x, y, z, "wood");
+    if (
+        ground < 4
+    ) {
+        return;
     }
 
-    for (let dx = -2; dx <= 2; dx++) {
+    for (
+        let y =
+            ground + 1;
+        y <=
+            ground + 5;
+        y++
+    ) {
 
-        for (let dz = -2; dz <= 2; dz++) {
+        createBlock(
+            x,
+            y,
+            z,
+            "wood"
+        );
+    }
 
-            for (let dy = 3; dy <= 5; dy++) {
+
+    for (
+        let dx = -2;
+        dx <= 2;
+        dx++
+    ) {
+
+        for (
+            let dz = -2;
+            dz <= 2;
+            dz++
+        ) {
+
+            for (
+                let dy = 3;
+                dy <= 6;
+                dy++
+            ) {
 
                 const distance =
                     Math.abs(dx) +
@@ -519,7 +1417,9 @@ function createTree(x, z) {
 
                 if (
                     distance <= 2 &&
-                    !(dx === 0 && dz === 0 && dy < 5)
+                    !(dx === 0 &&
+                      dz === 0 &&
+                      dy < 6)
                 ) {
 
                     createBlock(
@@ -535,89 +1435,104 @@ function createTree(x, z) {
 }
 
 
-/* 몇 그루 심기 */
+/* =========================================================
+   GENERATE
+========================================================= */
 
-[
-    [-10, -8],
-    [-5, 7],
-    [8, -5],
-    [14, 10],
-    [-15, 12],
-    [10, 14],
-    [-18, -10]
-].forEach(pos => {
-    createTree(pos[0], pos[1]);
-});
+generateWorld();
 
 
 /* =========================================================
-   플레이어
+   PLAYER
 ========================================================= */
 
 const player = {
 
-    position: new THREE.Vector3(
-        0,
+    position:
+        new THREE.Vector3(
+            0,
+            15,
+            10
+        ),
+
+    velocity:
+        new THREE.Vector3(),
+
+    width:
+        0.6,
+
+    height:
+        1.8,
+
+    speed:
+        5,
+
+    sprintSpeed:
         8,
-        8
-    ),
 
-    velocity: new THREE.Vector3(),
+    jump:
+        8,
 
-    width: 0.6,
+    onGround:
+        false
 
-    height: 1.8,
-
-    speed: 5,
-
-    jumpPower: 8,
-
-    onGround: false
 };
 
 camera.position.copy(
     player.position
 );
 
-camera.position.y += 1.6;
+camera.position.y +=
+    1.6;
 
 
 /* =========================================================
-   키 입력
+   INPUT
 ========================================================= */
 
 const keys = {};
 
 window.addEventListener(
     "keydown",
-    event => {
+    e => {
 
-        keys[event.code] = true;
+        keys[e.code] = true;
 
         if (
-            event.code === "Space" &&
-            player.onGround
+            e.code === "Space"
         ) {
 
-            player.velocity.y =
-                player.jumpPower;
+            e.preventDefault();
 
-            player.onGround = false;
+            if (
+                player.onGround
+            ) {
+
+                player.velocity.y =
+                    player.jump;
+
+                player.onGround =
+                    false;
+            }
         }
 
         if (
-            event.code.startsWith("Digit")
+            e.code.startsWith(
+                "Digit"
+            )
         ) {
 
             const n =
                 Number(
-                    event.code.replace(
-                        "Digit",
-                        ""
+                    e.code.substring(
+                        5
                     )
                 );
 
-            if (n >= 1 && n <= 5) {
+            if (
+                n >= 1 &&
+                n <= 5
+            ) {
 
                 selectedBlock =
                     n - 1;
@@ -625,29 +1540,33 @@ window.addEventListener(
                 updateHotbar();
             }
         }
+
     }
 );
 
 window.addEventListener(
     "keyup",
-    event => {
-        keys[event.code] = false;
+    e => {
+
+        keys[e.code] =
+            false;
     }
 );
 
 
 /* =========================================================
-   마우스 시점
+   MOUSE LOOK
 ========================================================= */
 
 let yaw = 0;
 let pitch = 0;
 
-const mouseSensitivity = 0.0025;
+const sensitivity =
+    0.0025;
 
 document.addEventListener(
     "mousemove",
-    event => {
+    e => {
 
         if (
             document.pointerLockElement !==
@@ -657,15 +1576,16 @@ document.addEventListener(
         }
 
         yaw -=
-            event.movementX *
-            mouseSensitivity;
+            e.movementX *
+            sensitivity;
 
         pitch -=
-            event.movementY *
-            mouseSensitivity;
+            e.movementY *
+            sensitivity;
 
         const limit =
-            Math.PI / 2 - 0.01;
+            Math.PI / 2 -
+            0.01;
 
         pitch =
             Math.max(
@@ -680,94 +1600,87 @@ document.addEventListener(
 
 
 /* =========================================================
-   게임 시작
+   COLLISION
 ========================================================= */
 
-const startScreen =
-    document.getElementById(
-        "startScreen"
-    );
+function isSolid(
+    x,
+    y,
+    z
+) {
 
-const startButton =
-    document.getElementById(
-        "startButton"
-    );
+    const type =
+        getBlock(
+            Math.floor(x),
+            Math.floor(y),
+            Math.floor(z)
+        );
 
-startButton.addEventListener(
-    "click",
-    () => {
-
-        renderer.domElement.requestPointerLock();
-
-        startScreen.style.display =
-            "none";
+    if (
+        type === undefined
+    ) {
+        return false;
     }
-);
 
-document.addEventListener(
-    "pointerlockchange",
-    () => {
-
-        if (
-            document.pointerLockElement !==
-            renderer.domElement
-        ) {
-
-            startScreen.style.display =
-                "flex";
-        }
+    if (
+        type === "water"
+    ) {
+        return false;
     }
-);
 
-
-/* =========================================================
-   이동 / 충돌
-========================================================= */
-
-function isSolid(x, y, z) {
-
-    return getBlock(
-        Math.floor(x),
-        Math.floor(y),
-        Math.floor(z)
-    ) !== undefined;
+    return true;
 }
 
-function playerCollides(pos) {
+
+function playerCollides(
+    pos
+) {
 
     const minX =
-        pos.x - player.width / 2;
+        pos.x -
+        player.width / 2;
 
     const maxX =
-        pos.x + player.width / 2;
+        pos.x +
+        player.width / 2;
 
     const minY =
         pos.y;
 
     const maxY =
-        pos.y + player.height;
+        pos.y +
+        player.height;
 
     const minZ =
-        pos.z - player.width / 2;
+        pos.z -
+        player.width / 2;
 
     const maxZ =
-        pos.z + player.width / 2;
+        pos.z +
+        player.width / 2;
+
 
     for (
-        let x = Math.floor(minX);
-        x <= Math.floor(maxX);
+        let x =
+            Math.floor(minX);
+        x <=
+            Math.floor(maxX);
         x++
     ) {
 
         for (
-            let y = Math.floor(minY);
-            y <= Math.floor(maxY);
+            let y =
+                Math.floor(minY);
+            y <=
+                Math.floor(maxY);
             y++
         ) {
 
             for (
-                let z = Math.floor(minZ);
-                z <= Math.floor(maxZ);
+                let z =
+                    Math.floor(minZ);
+                z <=
+                    Math.floor(maxZ);
                 z++
             ) {
 
@@ -787,9 +1700,18 @@ function playerCollides(pos) {
     return false;
 }
 
-function movePlayer(dx, dy, dz) {
 
-    const next =
+/* =========================================================
+   MOVE PLAYER
+========================================================= */
+
+function movePlayer(
+    dx,
+    dy,
+    dz
+) {
+
+    let next =
         player.position.clone();
 
     next.x += dx;
@@ -797,11 +1719,14 @@ function movePlayer(dx, dy, dz) {
     if (
         !playerCollides(next)
     ) {
+
         player.position.x =
             next.x;
     }
 
-    next.copy(player.position);
+
+    next =
+        player.position.clone();
 
     next.y += dy;
 
@@ -812,24 +1737,34 @@ function movePlayer(dx, dy, dz) {
         player.position.y =
             next.y;
 
-        player.onGround = false;
+        player.onGround =
+            false;
 
-    } else {
+    }
+    else {
 
-        if (dy < 0) {
-            player.onGround = true;
+        if (
+            dy < 0
+        ) {
+
+            player.onGround =
+                true;
         }
 
-        player.velocity.y = 0;
+        player.velocity.y =
+            0;
     }
 
-    next.copy(player.position);
+
+    next =
+        player.position.clone();
 
     next.z += dz;
 
     if (
         !playerCollides(next)
     ) {
+
         player.position.z =
             next.z;
     }
@@ -837,30 +1772,31 @@ function movePlayer(dx, dy, dz) {
 
 
 /* =========================================================
-   블록 Raycast
+   RAYCAST
 ========================================================= */
 
 const raycaster =
     new THREE.Raycaster();
 
-raycaster.far = 7;
+raycaster.far =
+    7;
 
-const center =
+const screenCenter =
     new THREE.Vector2(
         0,
         0
     );
 
-function getTargetBlock() {
+function getTarget() {
 
     raycaster.setFromCamera(
-        center,
+        screenCenter,
         camera
     );
 
     const objects =
         Array.from(
-            blockMeshes.values()
+            meshes.values()
         );
 
     const hits =
@@ -869,7 +1805,9 @@ function getTargetBlock() {
             false
         );
 
-    if (hits.length === 0) {
+    if (
+        hits.length === 0
+    ) {
         return null;
     }
 
@@ -878,12 +1816,188 @@ function getTargetBlock() {
 
 
 /* =========================================================
-   블록 파괴
+   BREAK SYSTEM
 ========================================================= */
+
+let breaking =
+    false;
+
+let breakTarget =
+    null;
+
+let breakStart =
+    0;
+
+let breakDuration =
+    0;
+
+const breakBar =
+    document.getElementById(
+        "breakBar"
+    );
+
+const breakProgress =
+    document.getElementById(
+        "breakProgress"
+    );
+
+
+function startBreaking(
+    hit
+) {
+
+    const obj =
+        hit.object;
+
+    const x =
+        obj.userData.x;
+
+    const y =
+        obj.userData.y;
+
+    const z =
+        obj.userData.z;
+
+    const type =
+        obj.userData.type;
+
+    if (
+        type === "water"
+    ) {
+        return;
+    }
+
+    if (
+        y <= 0
+    ) {
+        return;
+    }
+
+    const target =
+        worldKey(
+            x,
+            y,
+            z
+        );
+
+    if (
+        breaking &&
+        breakTarget === target
+    ) {
+        return;
+    }
+
+    breaking =
+        true;
+
+    breakTarget =
+        target;
+
+    breakStart =
+        performance.now();
+
+    breakDuration =
+        BLOCKS[type].hardness *
+        500;
+
+    breakBar.style.display =
+        "block";
+}
+
+
+function cancelBreaking() {
+
+    breaking =
+        false;
+
+    breakTarget =
+        null;
+
+    breakBar.style.display =
+        "none";
+
+    breakProgress.style.width =
+        "0%";
+}
+
+
+function updateBreaking() {
+
+    if (!breaking) {
+        return;
+    }
+
+    const targetMesh =
+        meshes.get(
+            breakTarget
+        );
+
+    if (!targetMesh) {
+
+        cancelBreaking();
+
+        return;
+    }
+
+    const elapsed =
+        performance.now() -
+        breakStart;
+
+    const progress =
+        Math.min(
+            1,
+            elapsed /
+            breakDuration
+        );
+
+    breakProgress.style.width =
+        (
+            progress * 100
+        ) + "%";
+
+
+    if (
+        progress >= 1
+    ) {
+
+        const x =
+            targetMesh.userData.x;
+
+        const y =
+            targetMesh.userData.y;
+
+        const z =
+            targetMesh.userData.z;
+
+        destroyBlock(
+            x,
+            y,
+            z
+        );
+
+        showMessage(
+            "⛏️ " +
+            BLOCKS[
+                targetMesh.userData.type
+            ].name +
+            " 채굴"
+        );
+
+        cancelBreaking();
+    }
+}
+
+
+/* =========================================================
+   MOUSE BUTTONS
+========================================================= */
+
+let mouseDown =
+    false;
 
 window.addEventListener(
     "mousedown",
-    event => {
+    e => {
 
         if (
             document.pointerLockElement !==
@@ -892,170 +2006,197 @@ window.addEventListener(
             return;
         }
 
-        const hit =
-            getTargetBlock();
+        if (
+            e.button === 0
+        ) {
 
-        if (!hit) return;
+            mouseDown =
+                true;
 
-        const block =
-            hit.object;
+            const target =
+                getTarget();
 
-        const x =
-            block.userData.x;
+            if (
+                target
+            ) {
 
-        const y =
-            block.userData.y;
-
-        const z =
-            block.userData.z;
-
-        /* 좌클릭 */
-
-        if (event.button === 0) {
-
-            /*
-             * 바닥 가장 아래 블록은
-             * 파괴하지 않도록 한다.
-             */
-            if (y <= 0) {
-                showMessage(
-                    "가장 아래 블록은 파괴할 수 없습니다!"
+                startBreaking(
+                    target
                 );
-                return;
             }
-
-            destroyBlock(
-                x,
-                y,
-                z
-            );
-
-            showMessage("⛏️ 블록 파괴");
         }
 
-        /* 우클릭 */
 
-        if (event.button === 2) {
+        if (
+            e.button === 2
+        ) {
 
-            const normal =
-                hit.face.normal.clone();
-
-            const newPosition =
-                block.position.clone()
-                    .subScalar(0.5)
-                    .add(normal);
-
-            const nx =
-                Math.floor(
-                    newPosition.x
-                );
-
-            const ny =
-                Math.floor(
-                    newPosition.y
-                );
-
-            const nz =
-                Math.floor(
-                    newPosition.z
-                );
-
-            /*
-             * 플레이어가 들어갈 위치에는
-             * 블록을 설치하지 않는다.
-             */
-
-            const testBlock =
-                new THREE.Vector3(
-                    nx + 0.5,
-                    ny + 0.5,
-                    nz + 0.5
-                );
-
-            const playerBox =
-                new THREE.Box3(
-                    new THREE.Vector3(
-                        player.position.x -
-                            player.width / 2,
-                        player.position.y,
-                        player.position.z -
-                            player.width / 2
-                    ),
-                    new THREE.Vector3(
-                        player.position.x +
-                            player.width / 2,
-                        player.position.y +
-                            player.height,
-                        player.position.z +
-                            player.width / 2
-                    )
-                );
-
-            const blockBox =
-                new THREE.Box3().setFromCenterAndSize(
-                    testBlock,
-                    new THREE.Vector3(
-                        1,
-                        1,
-                        1
-                    )
-                );
-
-            if (
-                playerBox.intersectsBox(
-                    blockBox
-                )
-            ) {
-                return;
-            }
-
-            if (
-                createBlock(
-                    nx,
-                    ny,
-                    nz,
-                    blockTypes[selectedBlock]
-                )
-            ) {
-
-                showMessage(
-                    "🧱 " +
-                    BLOCKS[
-                        blockTypes[selectedBlock]
-                    ].name +
-                    " 설치"
-                );
-            }
+            placeBlock();
         }
     }
 );
 
 
-/* 우클릭 메뉴 방지 */
+window.addEventListener(
+    "mouseup",
+    e => {
+
+        if (
+            e.button === 0
+        ) {
+
+            mouseDown =
+                false;
+
+            cancelBreaking();
+        }
+    }
+);
+
 
 window.addEventListener(
     "contextmenu",
-    event => {
-        event.preventDefault();
+    e => {
+
+        e.preventDefault();
     }
 );
 
 
 /* =========================================================
-   핫바
+   PLACE BLOCK
 ========================================================= */
+
+function placeBlock() {
+
+    const hit =
+        getTarget();
+
+    if (!hit) {
+        return;
+    }
+
+    const mesh =
+        hit.object;
+
+    const normal =
+        hit.face.normal.clone();
+
+    const base =
+        mesh.position.clone()
+            .subScalar(0.5);
+
+    const target =
+        base.add(
+            normal
+        );
+
+    const x =
+        Math.floor(
+            target.x
+        );
+
+    const y =
+        Math.floor(
+            target.y
+        );
+
+    const z =
+        Math.floor(
+            target.z
+        );
+
+
+    /* 플레이어와 겹치는지 */
+
+    const blockBox =
+        new THREE.Box3(
+            new THREE.Vector3(
+                x,
+                y,
+                z
+            ),
+            new THREE.Vector3(
+                x + 1,
+                y + 1,
+                z + 1
+            )
+        );
+
+    const playerBox =
+        new THREE.Box3(
+            new THREE.Vector3(
+                player.position.x -
+                    player.width / 2,
+                player.position.y,
+                player.position.z -
+                    player.width / 2
+            ),
+            new THREE.Vector3(
+                player.position.x +
+                    player.width / 2,
+                player.position.y +
+                    player.height,
+                player.position.z +
+                    player.width / 2
+            )
+        );
+
+    if (
+        playerBox.intersectsBox(
+            blockBox
+        )
+    ) {
+        return;
+    }
+
+
+    const type =
+        hotbarTypes[
+            selectedBlock
+        ];
+
+    if (
+        createBlock(
+            x,
+            y,
+            z,
+            type
+        )
+    ) {
+
+        showMessage(
+            "🧱 " +
+            BLOCKS[type].name +
+            " 설치"
+        );
+    }
+}
+
+
+/* =========================================================
+   HOTBAR
+========================================================= */
+
+let selectedBlock =
+    0;
 
 const hotbar =
     document.getElementById(
         "hotbar"
     );
 
+
 function updateHotbar() {
 
-    hotbar.innerHTML = "";
+    hotbar.innerHTML =
+        "";
 
-    blockTypes.forEach(
-        (type, index) => {
+    hotbarTypes.forEach(
+        (
+            type,
+            index
+        ) => {
 
             const slot =
                 document.createElement(
@@ -1066,12 +2207,15 @@ function updateHotbar() {
                 "slot";
 
             if (
-                index === selectedBlock
+                index ===
+                selectedBlock
             ) {
+
                 slot.classList.add(
                     "selected"
                 );
             }
+
 
             const number =
                 document.createElement(
@@ -1084,28 +2228,61 @@ function updateHotbar() {
             number.textContent =
                 index + 1;
 
+
             const icon =
                 document.createElement(
-                    "div"
+                    "canvas"
                 );
 
             icon.className =
                 "block-icon";
 
-            icon.style.background =
-                "#" +
-                BLOCKS[type]
-                    .color
-                    .toString(16)
-                    .padStart(
-                        6,
-                        "0"
-                    );
+            icon.width =
+                32;
 
-            slot.appendChild(number);
-            slot.appendChild(icon);
+            icon.height =
+                32;
 
-            hotbar.appendChild(slot);
+            const ctx =
+                icon.getContext(
+                    "2d"
+                );
+
+            const texture =
+                textures[
+                    type === "grass"
+                        ? "grassTop"
+                        : type
+                ];
+
+            if (
+                texture &&
+                texture.image
+            ) {
+
+                ctx.imageSmoothingEnabled =
+                    false;
+
+                ctx.drawImage(
+                    texture.image,
+                    0,
+                    0,
+                    32,
+                    32
+                );
+            }
+
+            slot.appendChild(
+                number
+            );
+
+            slot.appendChild(
+                icon
+            );
+
+            hotbar.appendChild(
+                slot
+            );
         }
     );
 }
@@ -1114,7 +2291,7 @@ updateHotbar();
 
 
 /* =========================================================
-   메시지
+   MESSAGE
 ========================================================= */
 
 const message =
@@ -1122,9 +2299,12 @@ const message =
         "message"
     );
 
-let messageTimer = null;
+let messageTimer;
 
-function showMessage(text) {
+
+function showMessage(
+    text
+) {
 
     message.textContent =
         text;
@@ -1150,35 +2330,444 @@ function showMessage(text) {
 
 
 /* =========================================================
-   게임 루프
+   START SCREEN
+========================================================= */
+
+const startScreen =
+    document.getElementById(
+        "startScreen"
+    );
+
+const startButton =
+    document.getElementById(
+        "startButton"
+    );
+
+
+startButton.addEventListener(
+    "click",
+    () => {
+
+        renderer.domElement
+            .requestPointerLock();
+
+        startScreen.style.display =
+            "none";
+    }
+);
+
+
+document.addEventListener(
+    "pointerlockchange",
+    () => {
+
+        if (
+            document.pointerLockElement !==
+            renderer.domElement
+        ) {
+
+            startScreen.style.display =
+                "flex";
+        }
+    }
+);
+
+
+/* =========================================================
+   SAVE WORLD
+========================================================= */
+
+function saveWorld() {
+
+    const data = [];
+
+    for (
+        const [
+            key,
+            type
+        ] of world.entries()
+    ) {
+
+        data.push([
+            key,
+            type
+        ]);
+    }
+
+    const save = {
+
+        world:
+            data,
+
+        player: {
+
+            x:
+                player.position.x,
+
+            y:
+                player.position.y,
+
+            z:
+                player.position.z
+        },
+
+        time:
+            worldTime
+
+    };
+
+    localStorage.setItem(
+        "htmlMinecraftWorld",
+        JSON.stringify(
+            save
+        )
+    );
+
+    showMessage(
+        "💾 월드 저장 완료"
+    );
+}
+
+
+/* =========================================================
+   LOAD WORLD
+========================================================= */
+
+function loadWorld() {
+
+    const raw =
+        localStorage.getItem(
+            "htmlMinecraftWorld"
+        );
+
+    if (!raw) {
+
+        showMessage(
+            "저장된 월드가 없습니다."
+        );
+
+        return false;
+    }
+
+    try {
+
+        const save =
+            JSON.parse(
+                raw
+            );
+
+        world.clear();
+
+        for (
+            const mesh of
+            meshes.values()
+        ) {
+
+            scene.remove(
+                mesh
+            );
+        }
+
+        meshes.clear();
+
+
+        for (
+            const [
+                key,
+                type
+            ] of save.world
+        ) {
+
+            const parts =
+                key.split(",")
+                    .map(Number);
+
+            const x =
+                parts[0];
+
+            const y =
+                parts[1];
+
+            const z =
+                parts[2];
+
+            setBlock(
+                x,
+                y,
+                z,
+                type
+            );
+
+            addMesh(
+                x,
+                y,
+                z,
+                type
+            );
+        }
+
+
+        player.position.set(
+            save.player.x,
+            save.player.y,
+            save.player.z
+        );
+
+        worldTime =
+            save.time ||
+            0;
+
+        showMessage(
+            "📂 월드 불러오기 완료"
+        );
+
+        return true;
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+        showMessage(
+            "월드 불러오기 실패"
+        );
+
+        return false;
+    }
+}
+
+
+/* =========================================================
+   SAVE BUTTON
+========================================================= */
+
+document
+    .getElementById(
+        "saveButton"
+    )
+    .addEventListener(
+        "click",
+        saveWorld
+    );
+
+
+/* =========================================================
+   AUTO SAVE
+========================================================= */
+
+setInterval(
+    () => {
+
+        if (
+            world.size > 0
+        ) {
+
+            const data = [];
+
+            for (
+                const [
+                    key,
+                    type
+                ] of world.entries()
+            ) {
+
+                data.push([
+                    key,
+                    type
+                ]);
+            }
+
+            localStorage.setItem(
+                "htmlMinecraftWorld",
+                JSON.stringify({
+
+                    world:
+                        data,
+
+                    player: {
+
+                        x:
+                            player.position.x,
+
+                        y:
+                            player.position.y,
+
+                        z:
+                            player.position.z
+                    },
+
+                    time:
+                        worldTime
+                })
+            );
+        }
+
+    },
+    30000
+);
+
+
+/* =========================================================
+   DAY / NIGHT
+========================================================= */
+
+let worldTime =
+    0;
+
+function updateDayNight(
+    delta
+) {
+
+    worldTime +=
+        delta * 0.015;
+
+    if (
+        worldTime >= 1
+    ) {
+
+        worldTime -= 1;
+    }
+
+
+    const angle =
+        worldTime *
+        Math.PI *
+        2;
+
+
+    /*
+     * 태양 위치
+     */
+
+    const radius =
+        100;
+
+    sun.position.set(
+        Math.cos(angle) *
+            radius,
+        Math.sin(angle) *
+            radius,
+        40
+    );
+
+
+    /*
+     * 낮밤 색
+     */
+
+    const daylight =
+        Math.max(
+            0.12,
+            Math.sin(angle) *
+                0.5 +
+                0.5
+        );
+
+
+    ambient.intensity =
+        0.25 +
+        daylight * 0.5;
+
+    sun.intensity =
+        0.25 +
+        daylight * 1.0;
+
+
+    const sky =
+        new THREE.Color();
+
+
+    const dayColor =
+        new THREE.Color(
+            0x87ceeb
+        );
+
+    const nightColor =
+        new THREE.Color(
+            0x10152b
+        );
+
+
+    sky.lerpColors(
+        nightColor,
+        dayColor,
+        daylight
+    );
+
+    scene.background =
+        sky;
+
+    scene.fog.color =
+        sky;
+}
+
+
+/* =========================================================
+   COORDINATES
+========================================================= */
+
+const coords =
+    document.getElementById(
+        "coords"
+    );
+
+function updateCoordinates() {
+
+    coords.textContent =
+        "XYZ: " +
+        Math.floor(
+            player.position.x
+        ) +
+        " / " +
+        Math.floor(
+            player.position.y
+        ) +
+        " / " +
+        Math.floor(
+            player.position.z
+        );
+}
+
+
+/* =========================================================
+   GAME LOOP
 ========================================================= */
 
 let lastTime =
     performance.now();
 
-function gameLoop(now) {
+
+function gameLoop(
+    now
+) {
 
     requestAnimationFrame(
         gameLoop
     );
 
+
     let delta =
-        (now - lastTime) / 1000;
+        (now - lastTime) /
+        1000;
 
-    lastTime = now;
+    lastTime =
+        now;
 
-    /*
-     * 너무 긴 프레임 방지
-     */
+
     delta =
         Math.min(
             delta,
             0.05
         );
 
-    /* ---------------------------------
-       마우스 방향
-    --------------------------------- */
+
+    /* =============================
+       LOOK
+    ============================= */
 
     camera.rotation.order =
         "YXZ";
@@ -1190,109 +2779,132 @@ function gameLoop(now) {
         pitch;
 
 
-    /* ---------------------------------
-       이동 방향
-    --------------------------------- */
+    /* =============================
+       MOVEMENT
+    ============================= */
 
-    let forward = 0;
-    let strafe = 0;
+    let forward =
+        0;
 
-    if (keys["KeyS"]) {
-        forward += 1;
+    let strafe =
+        0;
+
+
+    if (
+        keys["KeyW"]
+    ) {
+        forward++;
     }
 
-    if (keys["KeyW"]) {
-        forward -= 1;
+    if (
+        keys["KeyS"]
+    ) {
+        forward--;
     }
 
-    if (keys["KeyA"]) {
-        strafe -= 1;
+    if (
+        keys["KeyA"]
+    ) {
+        strafe--;
     }
 
-    if (keys["KeyD"]) {
-        strafe += 1;
+    if (
+        keys["KeyD"]
+    ) {
+        strafe++;
     }
 
-    const length =
+
+    const len =
         Math.sqrt(
-            forward * forward +
-            strafe * strafe
+            forward *
+                forward +
+            strafe *
+                strafe
         );
 
-    if (length > 0) {
 
-        forward /= length;
-        strafe /= length;
+    if (
+        len > 0
+    ) {
+
+        forward /=
+            len;
+
+        strafe /=
+            len;
     }
 
-    /*
-     * 카메라가 보는 방향을
-     * 이동 방향으로 변환
-     */
 
     const moveX =
-        (
-            Math.sin(yaw) *
-            forward
-        ) +
-        (
-            Math.cos(yaw) *
-            strafe
-        );
+        Math.sin(yaw) *
+            forward +
+        Math.cos(yaw) *
+            strafe;
 
     const moveZ =
-        (
-            Math.cos(yaw) *
-            forward
-        ) -
-        (
-            Math.sin(yaw) *
-            strafe
-        );
+        Math.cos(yaw) *
+            forward -
+        Math.sin(yaw) *
+            strafe;
+
+
+    let speed =
+        player.speed;
+
+
+    if (
+        keys["ShiftLeft"] ||
+        keys["ShiftRight"]
+    ) {
+
+        speed =
+            player.sprintSpeed;
+    }
+
 
     movePlayer(
         moveX *
-            player.speed *
+            speed *
             delta,
 
         0,
 
         moveZ *
-            player.speed *
+            speed *
             delta
     );
 
 
-    /* ---------------------------------
-       중력
-    --------------------------------- */
+    /* =============================
+       GRAVITY
+    ============================= */
 
     player.velocity.y -=
         20 * delta;
 
-    /*
-     * Y 이동
-     */
 
     movePlayer(
         0,
-        player.velocity.y * delta,
+        player.velocity.y *
+            delta,
         0
     );
 
 
-    /* ---------------------------------
-       낙사 방지
-    --------------------------------- */
+    /* =============================
+       FALL RESET
+    ============================= */
 
     if (
-        player.position.y < -10
+        player.position.y <
+        -20
     ) {
 
         player.position.set(
             0,
-            10,
-            8
+            15,
+            10
         );
 
         player.velocity.set(
@@ -1303,20 +2915,84 @@ function gameLoop(now) {
     }
 
 
-    /* ---------------------------------
-       카메라
-    --------------------------------- */
+    /* =============================
+       CAMERA
+    ============================= */
 
     camera.position.set(
         player.position.x,
-        player.position.y + 1.6,
+        player.position.y +
+            1.6,
         player.position.z
     );
 
 
-    /* ---------------------------------
-       렌더링
-    --------------------------------- */
+    /* =============================
+       BREAKING
+    ============================= */
+
+    if (
+        mouseDown
+    ) {
+
+        const target =
+            getTarget();
+
+        if (
+            target
+        ) {
+
+            const obj =
+                target.object;
+
+            const targetKey =
+                worldKey(
+                    obj.userData.x,
+                    obj.userData.y,
+                    obj.userData.z
+                );
+
+            if (
+                !breaking ||
+                breakTarget !==
+                targetKey
+            ) {
+
+                startBreaking(
+                    target
+                );
+            }
+
+        }
+        else {
+
+            cancelBreaking();
+        }
+    }
+
+
+    updateBreaking();
+
+
+    /* =============================
+       DAY NIGHT
+    ============================= */
+
+    updateDayNight(
+        delta
+    );
+
+
+    /* =============================
+       HUD
+    ============================= */
+
+    updateCoordinates();
+
+
+    /* =============================
+       RENDER
+    ============================= */
 
     renderer.render(
         scene,
@@ -1324,13 +3000,9 @@ function gameLoop(now) {
     );
 }
 
-requestAnimationFrame(
-    gameLoop
-);
-
 
 /* =========================================================
-   창 크기 변경
+   RESIZE
 ========================================================= */
 
 window.addEventListener(
@@ -1348,6 +3020,43 @@ window.addEventListener(
             window.innerHeight
         );
     }
+);
+
+
+/* =========================================================
+   LOAD SAVED WORLD
+========================================================= */
+
+const existingSave =
+    localStorage.getItem(
+        "htmlMinecraftWorld"
+    );
+
+if (
+    existingSave
+) {
+
+    /*
+     * 저장 데이터가 있으면
+     * 자동으로 불러온다.
+     */
+
+    loadWorld();
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+document.getElementById(
+    "loading"
+).style.display =
+    "none";
+
+
+requestAnimationFrame(
+    gameLoop
 );
 
 </script>
