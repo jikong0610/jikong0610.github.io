@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Tone Piano</title>
+    <title>Tone Piano v2</title>
 
     <script src="https://cdn.jsdelivr.net/npm/tone@15.1.22/build/Tone.js"></script>
 
@@ -16,33 +16,70 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: #181818;
+            background: #151515;
             color: white;
             font-family: Arial, sans-serif;
-
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        .piano-container {
-            width: min(900px, 95vw);
-            text-align: center;
+        .app {
+            width: 1100px;
+            max-width: 96vw;
         }
 
         h1 {
-            margin-bottom: 10px;
+            text-align: center;
+            margin-bottom: 8px;
         }
 
         #status {
+            text-align: center;
             color: #aaa;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button,
+        select,
+        input {
+            font: inherit;
+        }
+
+        button,
+        select {
+            padding: 9px 14px;
+            border: 0;
+            border-radius: 7px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .piano-wrapper {
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
 
         .piano {
             position: relative;
-            display: flex;
             height: 300px;
+            min-width: 1000px;
+            display: flex;
             user-select: none;
         }
 
@@ -50,9 +87,9 @@
             position: relative;
             flex: 1;
 
-            background: #fafafa;
+            background: #f4f4f4;
             border: 1px solid #222;
-            border-radius: 0 0 8px 8px;
+            border-radius: 0 0 7px 7px;
 
             color: #222;
 
@@ -60,24 +97,27 @@
             justify-content: center;
             align-items: flex-end;
 
-            padding-bottom: 20px;
+            padding-bottom: 18px;
 
             cursor: pointer;
             z-index: 1;
+
+            transition: 0.04s;
         }
 
         .white-key.active {
-            background: #ccc;
-            transform: translateY(3px);
+            background: #bbb;
+            transform: translateY(4px);
         }
 
         .black-key {
             position: absolute;
 
-            width: 7%;
-            height: 180px;
+            width: 4.4%;
+            height: 185px;
 
-            background: #111;
+            background: #090909;
+            border: 1px solid #333;
             border-radius: 0 0 6px 6px;
 
             color: white;
@@ -90,100 +130,540 @@
 
             cursor: pointer;
             z-index: 2;
+
+            transition: 0.04s;
         }
 
         .black-key.active {
             background: #444;
-            transform: translateY(3px);
+            transform: translateY(4px);
         }
 
-        .controls {
-            margin-top: 25px;
+        .recording {
+            background: #b00020;
+            color: white;
         }
 
-        button {
-            padding: 10px 20px;
-            border: 0;
-            border-radius: 8px;
-            cursor: pointer;
+        .recording-dot {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #777;
+            margin-right: 5px;
+        }
+
+        .recording-dot.on {
+            background: red;
+            box-shadow: 0 0 8px red;
+        }
+
+        .panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #202020;
+            border-radius: 10px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-row label {
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 180px;
+        }
+
+        #recordInfo {
+            color: #aaa;
+            margin-top: 10px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="piano-container">
+<div class="app">
 
-    <h1>🎹 Tone Piano</h1>
+    <h1>🎹 Tone Piano v2</h1>
 
     <div id="status">
-        아무 건반이나 눌러보세요
+        Audio 시작을 눌러주세요
     </div>
 
-    <div class="piano">
+    <div class="toolbar">
 
-        <!-- White keys -->
-        <div class="white-key" data-note="C4" data-key="a">C4<br>A</div>
-        <div class="white-key" data-note="D4" data-key="s">D4<br>S</div>
-        <div class="white-key" data-note="E4" data-key="d">E4<br>D</div>
-        <div class="white-key" data-note="F4" data-key="f">F4<br>F</div>
-        <div class="white-key" data-note="G4" data-key="g">G4<br>G</div>
-        <div class="white-key" data-note="A4" data-key="h">A4<br>H</div>
-        <div class="white-key" data-note="B4" data-key="j">B4<br>J</div>
-        <div class="white-key" data-note="C5" data-key="k">C5<br>K</div>
+        <button id="startButton">
+            🔊 Audio 시작
+        </button>
 
-        <!-- Black keys -->
-        <div class="black-key" data-note="C#4" data-key="w" style="left: 8.5%;">C#4<br>W</div>
-        <div class="black-key" data-note="D#4" data-key="e" style="left: 21%;">D#4<br>E</div>
+        <label>
+            음색:
+            <select id="instrument">
+                <option value="Synth">Synth</option>
+                <option value="AMSynth">AM Synth</option>
+                <option value="FMSynth">FM Synth</option>
+                <option value="DuoSynth">Duo Synth</option>
+            </select>
+        </label>
 
-        <div class="black-key" data-note="F#4" data-key="t" style="left: 46%;">F#4<br>T</div>
-        <div class="black-key" data-note="G#4" data-key="y" style="left: 58.5%;">G#4<br>Y</div>
-        <div class="black-key" data-note="A#4" data-key="u" style="left: 71%;">A#4<br>U</div>
+        <button id="recordButton">
+            <span id="recordDot" class="recording-dot"></span>
+            🔴 녹음
+        </button>
+
+        <button id="stopButton" disabled>
+            ⏹ 정지
+        </button>
+
+        <button id="playButton" disabled>
+            ▶ 재생
+        </button>
+
+        <button id="clearButton">
+            🗑 녹음 삭제
+        </button>
 
     </div>
 
-    <div class="controls">
-        <button id="startButton">🔊 Audio 시작</button>
+    <div class="piano-wrapper">
+
+        <div class="piano" id="piano">
+
+            <!-- C4 ~ C6 White Keys -->
+
+            <div class="white-key" data-note="C4" data-key="a">C4<br>A</div>
+            <div class="white-key" data-note="D4" data-key="s">D4<br>S</div>
+            <div class="white-key" data-note="E4" data-key="d">E4<br>D</div>
+            <div class="white-key" data-note="F4" data-key="f">F4<br>F</div>
+            <div class="white-key" data-note="G4" data-key="g">G4<br>G</div>
+            <div class="white-key" data-note="A4" data-key="h">A4<br>H</div>
+            <div class="white-key" data-note="B4" data-key="j">B4<br>J</div>
+
+            <div class="white-key" data-note="C5" data-key="k">C5<br>K</div>
+            <div class="white-key" data-note="D5" data-key="l">D5<br>L</div>
+            <div class="white-key" data-note="E5" data-key=";">E5<br>;</div>
+            <div class="white-key" data-note="F5" data-key="z">F5<br>Z</div>
+            <div class="white-key" data-note="G5" data-key="x">G5<br>X</div>
+            <div class="white-key" data-note="A5" data-key="c">A5<br>C</div>
+            <div class="white-key" data-note="B5" data-key="v">B5<br>V</div>
+
+            <div class="white-key" data-note="C6" data-key="b">C6<br>B</div>
+
+            <!-- Black Keys -->
+
+            <!-- C#4 -->
+            <div class="black-key" data-note="C#4" data-key="w" style="left: 4.5%;">C#4<br>W</div>
+
+            <!-- D#4 -->
+            <div class="black-key" data-note="D#4" data-key="e" style="left: 11.6%;">D#4<br>E</div>
+
+            <!-- F#4 -->
+            <div class="black-key" data-note="F#4" data-key="t" style="left: 25.9%;">F#4<br>T</div>
+
+            <!-- G#4 -->
+            <div class="black-key" data-note="G#4" data-key="y" style="left: 33.0%;">G#4<br>Y</div>
+
+            <!-- A#4 -->
+            <div class="black-key" data-note="A#4" data-key="u" style="left: 40.2%;">A#4<br>U</div>
+
+
+            <!-- C#5 -->
+            <div class="black-key" data-note="C#5" data-key="q" style="left: 47.3%;">C#5<br>Q</div>
+
+            <!-- D#5 -->
+            <div class="black-key" data-note="D#5" data-key="2" style="left: 54.5%;">D#5<br>2</div>
+
+            <!-- F#5 -->
+            <div class="black-key" data-note="F#5" data-key="4" style="left: 68.8%;">F#5<br>4</div>
+
+            <!-- G#5 -->
+            <div class="black-key" data-note="G#5" data-key="5" style="left: 75.9%;">G#5<br>5</div>
+
+            <!-- A#5 -->
+            <div class="black-key" data-note="A#5" data-key="6" style="left: 83.1%;">A#5<br>6</div>
+
+        </div>
+
+    </div>
+
+    <div class="panel">
+
+        <div class="control-row">
+
+            <label>
+                🔊 볼륨
+                <input
+                    id="volume"
+                    type="range"
+                    min="-30"
+                    max="0"
+                    value="-6"
+                >
+            </label>
+
+            <label>
+                🌊 리버브
+                <input
+                    id="reverb"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0.15"
+                >
+            </label>
+
+        </div>
+
+        <div id="recordInfo">
+            녹음된 음표: 0개
+        </div>
+
     </div>
 
 </div>
 
 <script>
-    const synth = new Tone.PolySynth(Tone.Synth).toDestination();
 
-    const activeNotes = new Set();
+    let synth;
+    let volumeNode;
+    let reverbNode;
 
-    const keys = document.querySelectorAll(".white-key, .black-key");
-    const status = document.getElementById("status");
-    const startButton = document.getElementById("startButton");
+    let currentInstrument = "Synth";
 
-    // Audio 시작
-    startButton.addEventListener("click", async () => {
+    const activeNotes = new Map();
+
+    let recording = false;
+    let recordedNotes = [];
+
+    let recordStartTime = 0;
+
+    const keys = document.querySelectorAll(
+        ".white-key, .black-key"
+    );
+
+    const status =
+        document.getElementById("status");
+
+    const startButton =
+        document.getElementById("startButton");
+
+    const instrumentSelect =
+        document.getElementById("instrument");
+
+    const recordButton =
+        document.getElementById("recordButton");
+
+    const stopButton =
+        document.getElementById("stopButton");
+
+    const playButton =
+        document.getElementById("playButton");
+
+    const clearButton =
+        document.getElementById("clearButton");
+
+    const volume =
+        document.getElementById("volume");
+
+    const reverb =
+        document.getElementById("reverb");
+
+    const recordInfo =
+        document.getElementById("recordInfo");
+
+    const recordDot =
+        document.getElementById("recordDot");
+
+
+    // --------------------------------
+    // Audio 초기화
+    // --------------------------------
+
+    async function initAudio() {
+
         await Tone.start();
 
-        status.textContent = "🎵 준비 완료!";
-        startButton.textContent = "Audio 활성화됨";
+        volumeNode =
+            new Tone.Volume(
+                Number(volume.value)
+            );
+
+        reverbNode =
+            new Tone.Reverb({
+                decay: 2,
+                wet: Number(reverb.value)
+            });
+
+        await reverbNode.generate();
+
+        volumeNode
+            .connect(reverbNode)
+            .toDestination();
+
+        createSynth();
+
+        status.textContent =
+            "🎵 준비 완료!";
+
+        startButton.textContent =
+            "Audio 활성화됨";
+
         startButton.disabled = true;
-    });
+    }
+
+
+    // --------------------------------
+    // Synth 생성
+    // --------------------------------
+
+    function createSynth() {
+
+        if (synth) {
+            synth.dispose();
+        }
+
+        switch (currentInstrument) {
+
+            case "AMSynth":
+
+                synth =
+                    new Tone.PolySynth(
+                        Tone.AMSynth
+                    );
+
+                break;
+
+            case "FMSynth":
+
+                synth =
+                    new Tone.PolySynth(
+                        Tone.FMSynth
+                    );
+
+                break;
+
+            case "DuoSynth":
+
+                synth =
+                    new Tone.PolySynth(
+                        Tone.DuoSynth
+                    );
+
+                break;
+
+            default:
+
+                synth =
+                    new Tone.PolySynth(
+                        Tone.Synth
+                    );
+        }
+
+        synth.connect(volumeNode);
+    }
+
+
+    // --------------------------------
+    // Audio 시작
+    // --------------------------------
+
+    startButton.addEventListener(
+        "click",
+        initAudio
+    );
+
+
+    // --------------------------------
+    // 음색 변경
+    // --------------------------------
+
+    instrumentSelect.addEventListener(
+        "change",
+        () => {
+
+            currentInstrument =
+                instrumentSelect.value;
+
+            if (volumeNode) {
+                createSynth();
+            }
+
+            status.textContent =
+                "음색: " +
+                currentInstrument;
+        }
+    );
+
+
+    // --------------------------------
+    // 볼륨
+    // --------------------------------
+
+    volume.addEventListener(
+        "input",
+        () => {
+
+            if (volumeNode) {
+                volumeNode.volume.value =
+                    Number(volume.value);
+            }
+        }
+    );
+
+
+    // --------------------------------
+    // 리버브
+    // --------------------------------
+
+    reverb.addEventListener(
+        "input",
+        () => {
+
+            if (reverbNode) {
+                reverbNode.wet.value =
+                    Number(reverb.value);
+            }
+        }
+    );
+
+
+    // --------------------------------
+    // 녹음 시작
+    // --------------------------------
+
+    recordButton.addEventListener(
+        "click",
+        async () => {
+
+            if (!synth) {
+                await initAudio();
+            }
+
+            recordedNotes = [];
+
+            recording = true;
+
+            recordStartTime =
+                performance.now();
+
+            recordButton.classList.add(
+                "recording"
+            );
+
+            recordDot.classList.add("on");
+
+            recordButton.innerHTML =
+                '<span id="recordDot" class="recording-dot on"></span> 🔴 녹음 중';
+
+            stopButton.disabled = false;
+            playButton.disabled = true;
+
+            status.textContent =
+                "🔴 녹음 중...";
+        }
+    );
+
+
+    // --------------------------------
+    // 녹음 정지
+    // --------------------------------
+
+    stopButton.addEventListener(
+        "click",
+        () => {
+
+            recording = false;
+
+            recordButton.classList.remove(
+                "recording"
+            );
+
+            recordDot.classList.remove(
+                "on"
+            );
+
+            recordButton.innerHTML =
+                '<span id="recordDot" class="recording-dot"></span> 🔴 녹음';
+
+            stopButton.disabled = true;
+
+            if (recordedNotes.length > 0) {
+                playButton.disabled = false;
+            }
+
+            status.textContent =
+                "⏹ 녹음 종료";
+
+            updateRecordInfo();
+        }
+    );
+
+
+    // --------------------------------
+    // 음 재생
+    // --------------------------------
 
     function playNote(element) {
-        const note = element.dataset.note;
+
+        if (!synth) {
+            return;
+        }
+
+        const note =
+            element.dataset.note;
 
         if (activeNotes.has(note)) {
             return;
         }
 
-        activeNotes.add(note);
+        activeNotes.set(
+            note,
+            true
+        );
 
         synth.triggerAttack(note);
 
-        element.classList.add("active");
+        element.classList.add(
+            "active"
+        );
 
-        status.textContent = "♪ " + note;
+        status.textContent =
+            "♪ " + note;
+
+        // 녹음
+        if (recording) {
+
+            recordedNotes.push({
+                note: note,
+                time:
+                    performance.now()
+                    - recordStartTime,
+                type: "down"
+            });
+        }
     }
 
+
+    // --------------------------------
+    // 음 정지
+    // --------------------------------
+
     function stopNote(element) {
-        const note = element.dataset.note;
+
+        if (!synth) {
+            return;
+        }
+
+        const note =
+            element.dataset.note;
 
         if (!activeNotes.has(note)) {
             return;
@@ -193,75 +673,256 @@
 
         synth.triggerRelease(note);
 
-        element.classList.remove("active");
+        element.classList.remove(
+            "active"
+        );
+
+        // 녹음
+        if (recording) {
+
+            recordedNotes.push({
+                note: note,
+                time:
+                    performance.now()
+                    - recordStartTime,
+                type: "up"
+            });
+        }
     }
 
-    // 마우스
-    keys.forEach(key => {
 
-        key.addEventListener("mousedown", async () => {
-            await Tone.start();
-            playNote(key);
-        });
+    // --------------------------------
+    // 마우스 / 터치
+    // --------------------------------
 
-        key.addEventListener("mouseup", () => {
-            stopNote(key);
-        });
+    keys.forEach(element => {
 
-        key.addEventListener("mouseleave", () => {
-            stopNote(key);
-        });
+        element.addEventListener(
+            "mousedown",
+            async event => {
 
-        // 모바일
-        key.addEventListener("touchstart", async event => {
-            event.preventDefault();
+                event.preventDefault();
 
-            await Tone.start();
-            playNote(key);
-        });
+                if (!synth) {
+                    await initAudio();
+                }
 
-        key.addEventListener("touchend", event => {
-            event.preventDefault();
-            stopNote(key);
-        });
+                playNote(element);
+            }
+        );
+
+        element.addEventListener(
+            "mouseup",
+            event => {
+
+                event.preventDefault();
+
+                stopNote(element);
+            }
+        );
+
+        element.addEventListener(
+            "mouseleave",
+            () => {
+                stopNote(element);
+            }
+        );
+
+
+        element.addEventListener(
+            "touchstart",
+            async event => {
+
+                event.preventDefault();
+
+                if (!synth) {
+                    await initAudio();
+                }
+
+                playNote(element);
+            },
+            { passive: false }
+        );
+
+
+        element.addEventListener(
+            "touchend",
+            event => {
+
+                event.preventDefault();
+
+                stopNote(element);
+            },
+            { passive: false }
+        );
     });
 
+
+    // --------------------------------
     // PC 키보드
-    document.addEventListener("keydown", async event => {
+    // --------------------------------
 
-        if (event.repeat) {
-            return;
+    document.addEventListener(
+        "keydown",
+        async event => {
+
+            if (event.repeat) {
+                return;
+            }
+
+            const key =
+                event.key.toLowerCase();
+
+            const pianoKey =
+                document.querySelector(
+                    `[data-key="${CSS.escape(key)}"]`
+                );
+
+            if (!pianoKey) {
+                return;
+            }
+
+            event.preventDefault();
+
+            if (!synth) {
+                await initAudio();
+            }
+
+            playNote(pianoKey);
         }
+    );
 
-        const key = event.key.toLowerCase();
 
-        const pianoKey = document.querySelector(
-            `[data-key="${key}"]`
-        );
+    document.addEventListener(
+        "keyup",
+        event => {
 
-        if (!pianoKey) {
-            return;
+            const key =
+                event.key.toLowerCase();
+
+            const pianoKey =
+                document.querySelector(
+                    `[data-key="${CSS.escape(key)}"]`
+                );
+
+            if (!pianoKey) {
+                return;
+            }
+
+            event.preventDefault();
+
+            stopNote(pianoKey);
         }
+    );
 
-        await Tone.start();
 
-        playNote(pianoKey);
-    });
+    // --------------------------------
+    // 녹음 데이터 표시
+    // --------------------------------
 
-    document.addEventListener("keyup", event => {
+    function updateRecordInfo() {
 
-        const key = event.key.toLowerCase();
+        recordInfo.textContent =
+            "녹음된 이벤트: " +
+            recordedNotes.length +
+            "개";
+    }
 
-        const pianoKey = document.querySelector(
-            `[data-key="${key}"]`
-        );
 
-        if (!pianoKey) {
-            return;
+    // --------------------------------
+    // 녹음 재생
+    // --------------------------------
+
+    playButton.addEventListener(
+        "click",
+        async () => {
+
+            if (!recordedNotes.length) {
+                return;
+            }
+
+            if (!synth) {
+                await initAudio();
+            }
+
+            status.textContent =
+                "▶ 녹음 재생 중...";
+
+            const start =
+                performance.now();
+
+            for (const event of recordedNotes) {
+
+                const delay =
+                    event.time -
+                    (performance.now() - start);
+
+                if (delay > 0) {
+                    await new Promise(
+                        resolve =>
+                            setTimeout(
+                                resolve,
+                                delay
+                            )
+                    );
+                }
+
+                const element =
+                    document.querySelector(
+                        `[data-note="${event.note}"]`
+                    );
+
+                if (!element) {
+                    continue;
+                }
+
+                if (event.type === "down") {
+
+                    synth.triggerAttack(
+                        event.note
+                    );
+
+                    element.classList.add(
+                        "active"
+                    );
+
+                } else {
+
+                    synth.triggerRelease(
+                        event.note
+                    );
+
+                    element.classList.remove(
+                        "active"
+                    );
+                }
+            }
+
+            status.textContent =
+                "🎵 재생 완료";
         }
+    );
 
-        stopNote(pianoKey);
-    });
+
+    // --------------------------------
+    // 녹음 삭제
+    // --------------------------------
+
+    clearButton.addEventListener(
+        "click",
+        () => {
+
+            recordedNotes = [];
+
+            playButton.disabled = true;
+
+            updateRecordInfo();
+
+            status.textContent =
+                "🗑 녹음을 삭제했습니다.";
+        }
+    );
+
 </script>
 
 </body>
