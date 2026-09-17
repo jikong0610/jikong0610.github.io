@@ -1,0 +1,568 @@
+!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주문</title>
+  경고⚠ 이 페이지는 놀이용 입니다.
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#f4f5f7;color:#222}
+header{background:#222;color:#fff;padding:18px 16px;text-align:center}
+header h1{margin:0 0 6px;font-size:26px}
+header p{margin:0;color:#ddd}
+nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:12px;background:#fff;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px #0001}
+nav button{background:#eee;color:#222}
+nav button.active{background:#222;color:#fff}
+.container{max-width:1000px;margin:22px auto;padding:0 14px}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #0000000d}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.product{border:1px solid #e5e5e5;border-radius:13px;padding:16px}
+.product .icon{font-size:45px}.product h3{margin:8px 0}
+.price{font-weight:bold;font-size:19px;margin:8px 0}
+.small{font-size:13px;color:#777}
+button{border:0;border-radius:9px;padding:10px 14px;font-size:14px;cursor:pointer}
+.primary{background:#1677ff;color:white}.danger{background:#e74c3c;color:white}.success{background:#18a058;color:white}.gray{background:#eee}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea,select{width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin:5px 0 13px;font-size:15px}
+label{font-weight:bold;font-size:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cart-row,.order-row,.manage-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.total{text-align:right;font-size:21px;font-weight:bold;margin-top:15px}
+.empty{text-align:center;color:#888;padding:25px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:12px}
+.status-received{background:#e8f1ff;color:#1261c9}
+.status-preparing{background:#fff2cc;color:#8a6500}
+.status-done{background:#dff6e8;color:#087a3d}
+.status-cancel{background:#ffe1e1;color:#b21f1f}
+.notice{padding:12px;border-radius:10px;background:#fff7d6;margin-bottom:14px}
+hr{border:0;border-top:1px solid #eee;margin:18px 0}
+.modal-back{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:15px;z-index:10}
+.modal{background:#fff;border-radius:15px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.cart-row,.order-row,.manage-row{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏪 주문 놀이</h1>
+  <p>상품을 만들고 주문을 받아보세요!</p>
+</header>
+
+<nav>
+  <button class="active" data-page="shop">🛍️ 주문하기</button>
+  <button data-page="orders">📋 주문 받기</button>
+  <button data-page="products">⚙️ 상품 관리</button>
+</nav>
+
+<main class="container">
+
+<section id="shop" class="page active">
+  <div class="card">
+    <h2>🛍️ 상품</h2>
+    <div id="shopProducts" class="grid"></div>
+  </div>
+
+  <div class="card">
+    <h2>🛒 장바구니</h2>
+    <div id="cart"></div>
+    <div id="cartTotal" class="total">합계: 0원</div>
+    <hr>
+    <label>손님 이름</label>
+    <input id="customerName" placeholder="예: 동생">
+    <label>요청사항</label>
+    <textarea id="customerMemo" rows="3" placeholder="예: 콜라 차갑게 주세요"></textarea>
+    <button class="primary" style="width:100%" onclick="placeOrder()">📨 주문 보내기</button>
+  </div>
+</section>
+
+<section id="orders" class="page">
+  <div class="card">
+    <h2>📋 주문 받기</h2>
+    <div class="notice">이 페이지에서 주문을 접수하고 상태를 바꿔보세요.</div>
+    <div class="actions">
+      <button class="gray" onclick="renderOrders()">🔄 새로고침</button>
+      <button class="danger" onclick="clearOrders()">🗑️ 모든 주문 삭제</button>
+    </div>
+  </div>
+  <div id="ordersList"></div>
+</section>
+
+<section id="products" class="page">
+  <div class="card">
+    <h2>➕ 상품 추가</h2>
+    <div class="form-grid">
+      <div>
+        <label>상품 이름</label>
+        <input id="pName" placeholder="예: 떡볶이">
+      </div>
+      <div>
+        <label>가격</label>
+        <input id="pPrice" type="number" min="0" placeholder="3000">
+      </div>
+      <div>
+        <label>아이콘</label>
+        <input id="pIcon" maxlength="4" placeholder="🌶️">
+      </div>
+      <div>
+        <label>재고</label>
+        <input id="pStock" type="number" min="0" placeholder="10">
+      </div>
+    </div>
+    <button class="primary" onclick="addProduct()">상품 등록</button>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ 상품 관리</h2>
+    <div id="manageProducts"></div>
+  </div>
+
+  <div class="card">
+    <h2>💾 데이터</h2>
+    <p class="small">상품, 장바구니, 주문은 이 브라우저의 localStorage에 저장됩니다.</p>
+    <button class="gray" onclick="exportData()">📤 데이터 백업</button>
+    <button class="danger" onclick="resetAll()">⚠️ 전체 초기화</button>
+  </div>
+</section>
+
+</main>
+
+<div id="modalBack" class="modal-back">
+  <div class="modal">
+    <h2>✏️ 상품 수정</h2>
+    <input id="editId" type="hidden">
+    <label>상품 이름</label>
+    <input id="editName">
+    <label>가격</label>
+    <input id="editPrice" type="number" min="0">
+    <label>아이콘</label>
+    <input id="editIcon" maxlength="4">
+    <label>재고</label>
+    <input id="editStock" type="number" min="0">
+    <div class="actions">
+      <button class="primary" onclick="saveEdit()">저장</button>
+      <button class="gray" onclick="closeModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_PRODUCTS = "play_order_products_v1";
+const KEY_CART = "play_order_cart_v1";
+const KEY_ORDERS = "play_order_orders_v1";
+
+const defaultProducts = [
+  {id: crypto.randomUUID(), name:"햄버거", price:5000, icon:"🍔", stock:20},
+  {id: crypto.randomUUID(), name:"피자", price:8000, icon:"🍕", stock:10},
+  {id: crypto.randomUUID(), name:"콜라", price:1500, icon:"🥤", stock:30}
+];
+
+let products = load(KEY_PRODUCTS, null);
+let cart = load(KEY_CART, []);
+let orders = load(KEY_ORDERS, []);
+
+if (!products) {
+  products = defaultProducts;
+  save(KEY_PRODUCTS, products);
+}
+
+function load(key, fallback) {
+  try {
+    const x = localStorage.getItem(key);
+    return x === null ? fallback : JSON.parse(x);
+  } catch {
+    return fallback;
+  }
+}
+
+function save(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function money(n) {
+  return Number(n).toLocaleString("ko-KR") + "원";
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => showPage(btn.dataset.page));
+});
+
+function showPage(page) {
+  document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(x => x.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+  document.querySelector(`[data-page="${page}"]`).classList.add("active");
+
+  if (page === "shop") renderShop();
+  if (page === "orders") renderOrders();
+  if (page === "products") renderManageProducts();
+}
+
+function renderShop() {
+  const el = document.getElementById("shopProducts");
+  if (!products.length) {
+    el.innerHTML = '<div class="empty">등록된 상품이 없습니다.<br>상품 관리에서 추가하세요.</div>';
+  } else {
+    el.innerHTML = products.map(p => `
+      <div class="product">
+        <div class="icon">${escapeHTML(p.icon || "📦")}</div>
+        <h3>${escapeHTML(p.name)}</h3>
+        <div class="price">${money(p.price)}</div>
+        <div class="small">재고: ${p.stock}개</div><br>
+        <button class="primary" style="width:100%" ${p.stock <= 0 ? "disabled" : ""}
+          onclick="addToCart('${p.id}')">
+          ${p.stock <= 0 ? "품절" : "🛒 담기"}
+        </button>
+      </div>
+    `).join("");
+  }
+  renderCart();
+}
+
+function addToCart(id) {
+  const p = products.find(x => x.id === id);
+  if (!p || p.stock <= 0) return;
+
+  const item = cart.find(x => x.id === id);
+  if (item) {
+    if (item.qty >= p.stock) {
+      alert("재고보다 많이 담을 수 없습니다.");
+      return;
+    }
+    item.qty++;
+  } else {
+    cart.push({id, qty:1});
+  }
+  save(KEY_CART, cart);
+  renderCart();
+}
+
+function changeCart(id, amount) {
+  const p = products.find(x => x.id === id);
+  const item = cart.find(x => x.id === id);
+  if (!p || !item) return;
+
+  item.qty += amount;
+  if (item.qty <= 0) cart = cart.filter(x => x.id !== id);
+  if (item.qty > p.stock) item.qty = p.stock;
+
+  save(KEY_CART, cart);
+  renderCart();
+}
+
+function removeCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  save(KEY_CART, cart);
+  renderCart();
+}
+
+function renderCart() {
+  const el = document.getElementById("cart");
+  let total = 0;
+
+  const valid = cart.filter(item => products.some(p => p.id === item.id));
+  if (valid.length !== cart.length) {
+    cart = valid;
+    save(KEY_CART, cart);
+  }
+
+  if (!cart.length) {
+    el.innerHTML = '<div class="empty">장바구니가 비어 있습니다.</div>';
+  } else {
+    el.innerHTML = cart.map(item => {
+      const p = products.find(x => x.id === item.id);
+      const sub = p.price * item.qty;
+      total += sub;
+      return `
+        <div class="cart-row">
+          <div>
+            <strong>${escapeHTML(p.icon)} ${escapeHTML(p.name)}</strong><br>
+            <span class="small">${money(p.price)} × ${item.qty} = ${money(sub)}</span>
+          </div>
+          <div class="actions">
+            <button class="gray" onclick="changeCart('${p.id}',-1)">−</button>
+            <button class="gray" onclick="changeCart('${p.id}',1)">+</button>
+            <button class="danger" onclick="removeCart('${p.id}')">삭제</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  document.getElementById("cartTotal").textContent = "합계: " + money(total);
+}
+
+function placeOrder() {
+  if (!cart.length) {
+    alert("장바구니에 상품을 담아주세요.");
+    return;
+  }
+
+  const name = document.getElementById("customerName").value.trim() || "손님";
+  const memo = document.getElementById("customerMemo").value.trim();
+
+  for (const item of cart) {
+    const p = products.find(x => x.id === item.id);
+    if (!p || item.qty > p.stock) {
+      alert(`${p ? p.name : "상품"}의 재고가 부족합니다.`);
+      return;
+    }
+  }
+
+  const orderItems = cart.map(item => {
+    const p = products.find(x => x.id === item.id);
+    return {
+      id:p.id, name:p.name, icon:p.icon, price:p.price, qty:item.qty,
+      subtotal:p.price * item.qty
+    };
+  });
+
+  const total = orderItems.reduce((sum, x) => sum + x.subtotal, 0);
+
+  orderItems.forEach(item => {
+    const p = products.find(x => x.id === item.id);
+    p.stock -= item.qty;
+  });
+
+  const order = {
+    id: "ORD-" + Date.now().toString().slice(-8),
+    customer:name,
+    memo,
+    items:orderItems,
+    total,
+    status:"접수",
+    createdAt:new Date().toLocaleString("ko-KR")
+  };
+
+  orders.unshift(order);
+  cart = [];
+
+  save(KEY_PRODUCTS, products);
+  save(KEY_CART, cart);
+  save(KEY_ORDERS, orders);
+
+  document.getElementById("customerName").value = "";
+  document.getElementById("customerMemo").value = "";
+
+  renderShop();
+  alert(`주문 완료!\n주문번호: ${order.id}\n총액: ${money(total)}`);
+}
+
+function statusClass(status) {
+  if (status === "접수") return "status-received";
+  if (status === "준비 중") return "status-preparing";
+  if (status === "완료") return "status-done";
+  return "status-cancel";
+}
+
+function renderOrders() {
+  const el = document.getElementById("ordersList");
+
+  if (!orders.length) {
+    el.innerHTML = '<div class="card empty">아직 주문이 없습니다.</div>';
+    return;
+  }
+
+  el.innerHTML = orders.map(o => `
+    <div class="card">
+      <div class="order-row">
+        <div>
+          <strong>${escapeHTML(o.id)}</strong><br>
+          <span class="small">${escapeHTML(o.createdAt)} · ${escapeHTML(o.customer)}</span>
+        </div>
+        <span class="badge ${statusClass(o.status)}">${escapeHTML(o.status)}</span>
+      </div>
+
+      <div>
+        ${o.items.map(i => `
+          <div class="order-row">
+            <span>${escapeHTML(i.icon)} ${escapeHTML(i.name)} × ${i.qty}</span>
+            <strong>${money(i.subtotal)}</strong>
+          </div>
+        `).join("")}
+      </div>
+
+      ${o.memo ? `<p>📝 요청: ${escapeHTML(o.memo)}</p>` : ""}
+      <div class="total">합계: ${money(o.total)}</div>
+
+      <hr>
+      <div class="actions">
+        <button class="primary" onclick="setStatus('${o.id}','접수')">📥 접수</button>
+        <button class="gray" onclick="setStatus('${o.id}','준비 중')">👨‍🍳 준비 중</button>
+        <button class="success" onclick="setStatus('${o.id}','완료')">✅ 완료</button>
+        <button class="danger" onclick="setStatus('${o.id}','취소')">❌ 취소</button>
+        <button class="gray" onclick="deleteOrder('${o.id}')">🗑️ 삭제</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function setStatus(id, status) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  o.status = status;
+  save(KEY_ORDERS, orders);
+  renderOrders();
+}
+
+function deleteOrder(id) {
+  if (!confirm("이 주문을 삭제할까요?")) return;
+  orders = orders.filter(x => x.id !== id);
+  save(KEY_ORDERS, orders);
+  renderOrders();
+}
+
+function clearOrders() {
+  if (!orders.length) return;
+  if (!confirm("모든 주문을 삭제할까요?")) return;
+  orders = [];
+  save(KEY_ORDERS, orders);
+  renderOrders();
+}
+
+function addProduct() {
+  const name = document.getElementById("pName").value.trim();
+  const price = Number(document.getElementById("pPrice").value);
+  const icon = document.getElementById("pIcon").value.trim() || "📦";
+  const stock = Number(document.getElementById("pStock").value);
+
+  if (!name) return alert("상품 이름을 입력하세요.");
+  if (!Number.isFinite(price) || price < 0) return alert("가격을 올바르게 입력하세요.");
+  if (!Number.isFinite(stock) || stock < 0) return alert("재고를 올바르게 입력하세요.");
+
+  products.push({
+    id:crypto.randomUUID(),
+    name, price, icon, stock:Math.floor(stock)
+  });
+
+  save(KEY_PRODUCTS, products);
+
+  document.getElementById("pName").value = "";
+  document.getElementById("pPrice").value = "";
+  document.getElementById("pIcon").value = "";
+  document.getElementById("pStock").value = "";
+
+  renderManageProducts();
+  renderShop();
+}
+
+function renderManageProducts() {
+  const el = document.getElementById("manageProducts");
+
+  if (!products.length) {
+    el.innerHTML = '<div class="empty">상품이 없습니다.</div>';
+    return;
+  }
+
+  el.innerHTML = products.map(p => `
+    <div class="manage-row">
+      <div>
+        <strong>${escapeHTML(p.icon)} ${escapeHTML(p.name)}</strong><br>
+        <span class="small">${money(p.price)} · 재고 ${p.stock}개</span>
+      </div>
+      <div class="actions">
+        <button class="gray" onclick="openEdit('${p.id}')">✏️ 수정</button>
+        <button class="danger" onclick="deleteProduct('${p.id}')">🗑️ 삭제</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openEdit(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById("editId").value = p.id;
+  document.getElementById("editName").value = p.name;
+  document.getElementById("editPrice").value = p.price;
+  document.getElementById("editIcon").value = p.icon;
+  document.getElementById("editStock").value = p.stock;
+  document.getElementById("modalBack").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("modalBack").style.display = "none";
+}
+
+function saveEdit() {
+  const id = document.getElementById("editId").value;
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+
+  const name = document.getElementById("editName").value.trim();
+  const price = Number(document.getElementById("editPrice").value);
+  const icon = document.getElementById("editIcon").value.trim() || "📦";
+  const stock = Number(document.getElementById("editStock").value);
+
+  if (!name || price < 0 || stock < 0) {
+    alert("입력값을 확인하세요.");
+    return;
+  }
+
+  p.name = name;
+  p.price = price;
+  p.icon = icon;
+  p.stock = Math.floor(stock);
+
+  save(KEY_PRODUCTS, products);
+  closeModal();
+  renderManageProducts();
+  renderShop();
+}
+
+function deleteProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`"${p.name}" 상품을 삭제할까요?`)) return;
+
+  products = products.filter(x => x.id !== id);
+  cart = cart.filter(x => x.id !== id);
+
+  save(KEY_PRODUCTS, products);
+  save(KEY_CART, cart);
+
+  renderManageProducts();
+  renderShop();
+}
+
+function exportData() {
+  const data = {
+    products,
+    orders,
+    exportedAt:new Date().toISOString()
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "order-play-backup.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function resetAll() {
+  if (!confirm("상품, 주문, 장바구니를 모두 초기화할까요?")) return;
+
+  localStorage.removeItem(KEY_PRODUCTS);
+  localStorage.removeItem(KEY_CART);
+  localStorage.removeItem(KEY_ORDERS);
+
+  location.reload();
+}
+
+renderShop();
+renderOrders();
+renderManageProducts();
+</script>
+
+</body>
+</html>
+
