@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간단 주문 시스템</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: #f5f6f8;
+    color: #222;
+}
+
+header {
+    background: #222;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+/* 상품 */
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.product {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px #00000015;
+}
+
+.product h3 {
+    margin-top: 0;
+}
+
+.price {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 10px 0 15px;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.add {
+    width: 100%;
+    background: #222;
+    color: white;
+}
+
+.add:hover {
+    background: #444;
+}
+
+/* 장바구니 */
+.cart {
+    margin-top: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.quantity button {
+    padding: 5px 10px;
+    margin: 0 3px;
+}
+
+.total {
+    text-align: right;
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+/* 주문서 */
+.order-form {
+    margin-top: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin: 7px 0 15px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    font-size: 15px;
+}
+
+.order-button {
+    width: 100%;
+    background: #1683ff;
+    color: white;
+    font-size: 17px;
+    padding: 14px;
+}
+
+.order-button:hover {
+    background: #006edb;
+}
+
+.empty {
+    color: #777;
+    text-align: center;
+    padding: 20px;
+}
+
+/* 완료 화면 */
+#complete {
+    display: none;
+    margin-top: 30px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.order-number {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 20px;
+}
+
+@media (max-width: 500px) {
+    .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🛒 주문 시스템</h1>
+    <p>간단한 온라인 주문 페이지</p>
+</header>
+
+<div class="container">
+
+    <h2>상품</h2>
+
+    <div class="products">
+
+        <div class="product">
+            <h3>🍔 햄버거</h3>
+            <p>맛있는 기본 햄버거</p>
+            <div class="price">5,000원</div>
+            <button class="add" onclick="addCart('햄버거', 5000)">
+                장바구니에 담기
+            </button>
+        </div>
+
+        <div class="product">
+            <h3>🍟 감자튀김</h3>
+            <p>바삭한 감자튀김</p>
+            <div class="price">2,000원</div>
+            <button class="add" onclick="addCart('감자튀김', 2000)">
+                장바구니에 담기
+            </button>
+        </div>
+
+        <div class="product">
+            <h3>🥤 콜라</h3>
+            <p>시원한 탄산음료</p>
+            <div class="price">1,500원</div>
+            <button class="add" onclick="addCart('콜라', 1500)">
+                장바구니에 담기
+            </button>
+        </div>
+
+        <div class="product">
+            <h3>🍕 피자</h3>
+            <p>치즈가 듬뿍 들어간 피자</p>
+            <div class="price">12,000원</div>
+            <button class="add" onclick="addCart('피자', 12000)">
+                장바구니에 담기
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- 장바구니 -->
+    <div class="cart">
+
+        <h2>🛒 장바구니</h2>
+
+        <div id="cartList">
+            <div class="empty">
+                장바구니가 비어 있습니다.
+            </div>
+        </div>
+
+        <div class="total">
+            합계: <span id="total">0</span>원
+        </div>
+
+    </div>
+
+
+    <!-- 주문서 -->
+    <div class="order-form">
+
+        <h2>📝 주문 정보</h2>
+
+        <label>이름</label>
+        <input id="name" type="text" placeholder="이름을 입력하세요">
+
+        <label>전화번호</label>
+        <input id="phone" type="tel" placeholder="010-0000-0000">
+
+        <label>주소</label>
+        <input id="address" type="text" placeholder="주소를 입력하세요">
+
+        <label>결제 방법</label>
+        <select id="payment">
+            <option value="현금">현금</option>
+            <option value="카드">카드</option>
+            <option value="계좌이체">계좌이체</option>
+        </select>
+
+        <label>요청사항</label>
+        <textarea id="memo" rows="4"
+            placeholder="요청사항을 입력하세요"></textarea>
+
+        <button class="order-button" onclick="submitOrder()">
+            주문하기
+        </button>
+
+    </div>
+
+
+    <!-- 주문 완료 -->
+    <div id="complete">
+
+        <h2>🎉 주문이 완료되었습니다!</h2>
+
+        <p>주문번호</p>
+
+        <div class="order-number" id="orderNumber"></div>
+
+        <p id="orderSummary"></p>
+
+        <button onclick="location.reload()">
+            새 주문
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+    장바구니
+*/
+
+let cart = [];
+
+
+/*
+    상품 추가
+*/
+
+function addCart(name, price) {
+
+    const existing = cart.find(item => item.name === name);
+
+    if (existing) {
+        existing.quantity++;
+    } else {
+        cart.push({
+            name: name,
+            price: price,
+            quantity: 1
+        });
+    }
+
+    renderCart();
+}
+
+
+/*
+    장바구니 출력
+*/
+
+function renderCart() {
+
+    const list = document.getElementById("cartList");
+    const totalElement = document.getElementById("total");
+
+    list.innerHTML = "";
+
+    if (cart.length === 0) {
+
+        list.innerHTML =
+            '<div class="empty">장바구니가 비어 있습니다.</div>';
+
+        totalElement.textContent = "0";
+
+        return;
+    }
+
+    let total = 0;
+
+    cart.forEach((item, index) => {
+
+        const itemTotal = item.price * item.quantity;
+
+        total += itemTotal;
+
+        const div = document.createElement("div");
+
+        div.className = "cart-item";
+
+        div.innerHTML = `
+            <div>
+                <strong>${item.name}</strong>
+                <br>
+                ${item.price.toLocaleString()}원 × ${item.quantity}
+                =
+                ${itemTotal.toLocaleString()}원
+            </div>
+
+            <div class="quantity">
+
+                <button onclick="changeQuantity(${index}, -1)">
+                    −
+                </button>
+
+                <span>${item.quantity}</span>
+
+                <button onclick="changeQuantity(${index}, 1)">
+                    +
+                </button>
+
+                <button onclick="removeItem(${index})">
+                    삭제
+                </button>
+
+            </div>
+        `;
+
+        list.appendChild(div);
+    });
+
+    totalElement.textContent = total.toLocaleString();
+}
+
+
+/*
+    수량 변경
+*/
+
+function changeQuantity(index, amount) {
+
+    cart[index].quantity += amount;
+
+    if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+    }
+
+    renderCart();
+}
+
+
+/*
+    상품 삭제
+*/
+
+function removeItem(index) {
+
+    cart.splice(index, 1);
+
+    renderCart();
+}
+
+
+/*
+    주문
+*/
+
+function submitOrder() {
+
+    if (cart.length === 0) {
+
+        alert("상품을 먼저 선택해주세요.");
+
+        return;
+    }
+
+
+    const name =
+        document.getElementById("name").value.trim();
+
+    const phone =
+        document.getElementById("phone").value.trim();
+
+    const address =
+        document.getElementById("address").value.trim();
+
+
+    if (!name) {
+
+        alert("이름을 입력해주세요.");
+
+        return;
+    }
+
+    if (!phone) {
+
+        alert("전화번호를 입력해주세요.");
+
+        return;
+    }
+
+    if (!address) {
+
+        alert("주소를 입력해주세요.");
+
+        return;
+    }
+
+
+    let total = 0;
+
+    cart.forEach(item => {
+
+        total += item.price * item.quantity;
+
+    });
+
+
+    /*
+        주문번호 생성
+    */
+
+    const orderNumber =
+        "ORD-" +
+        Date.now().toString().slice(-8);
+
+
+    /*
+        주문 완료 화면
+    */
+
+    document.getElementById("orderNumber")
+        .textContent = orderNumber;
+
+    document.getElementById("orderSummary")
+        .textContent =
+        `${name}님, 총 ${total.toLocaleString()}원 주문이 접수되었습니다.`;
+
+
+    document.querySelector(".products").style.display = "none";
+
+    document.querySelector(".cart").style.display = "none";
+
+    document.querySelector(".order-form").style.display = "none";
+
+    document.getElementById("complete").style.display = "block";
+
+
+    /*
+        콘솔에 주문 정보 출력
+        (서버가 없기 때문에 실제 전송은 하지 않음)
+    */
+
+    console.log({
+        orderNumber: orderNumber,
+        name: name,
+        phone: phone,
+        address: address,
+        payment: document.getElementById("payment").value,
+        memo: document.getElementById("memo").value,
+        cart: cart,
+        total: total
+    });
+
+}
+
+</script>
+
+</body>
+</html>
