@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주문 놀이</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#f4f5f7;color:#222}
+header{background:#222;color:#fff;padding:18px 16px;text-align:center}
+header h1{margin:0 0 6px;font-size:26px}
+header p{margin:0;color:#ddd}
+nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:12px;background:#fff;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px #0001}
+nav button{background:#eee;color:#222}
+nav button.active{background:#222;color:#fff}
+.container{max-width:1000px;margin:22px auto;padding:0 14px}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #0000000d}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.product{border:1px solid #e5e5e5;border-radius:13px;padding:16px}
+.product .icon{font-size:45px}.product h3{margin:8px 0}
+.price{font-weight:bold;font-size:19px;margin:8px 0}
+.small{font-size:13px;color:#777}
+button{border:0;border-radius:9px;padding:10px 14px;font-size:14px;cursor:pointer}
+.primary{background:#1677ff;color:white}.danger{background:#e74c3c;color:white}.success{background:#18a058;color:white}.gray{background:#eee}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea,select{width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin:5px 0 13px;font-size:15px}
+label{font-weight:bold;font-size:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cart-row,.order-row,.manage-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.total{text-align:right;font-size:21px;font-weight:bold;margin-top:15px}
+.empty{text-align:center;color:#888;padding:25px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:12px}
+.status-received{background:#e8f1ff;color:#1261c9}
+.status-preparing{background:#fff2cc;color:#8a6500}
+.status-done{background:#dff6e8;color:#087a3d}
+.status-cancel{background:#ffe1e1;color:#b21f1f}
+.notice{padding:12px;border-radius:10px;background:#fff7d6;margin-bottom:14px}
+hr{border:0;border-top:1px solid #eee;margin:18px 0}
+.modal-back{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:15px;z-index:10}
+.modal{background:#fff;border-radius:15px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.cart-row,.order-row,.manage-row{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏪 주문 놀이</h1>
+  <p>상품을 만들고 주문을 받아보세요!</p>
+</header>
+
+<nav>
+  <button class="active" data-page="shop">🛍️ 주문하기</button>
+  <button data-page="orders">📋 주문 받기</button>
+  <button data-page="products">⚙️ 상품 관리</button>
+</nav>
+
+<main class="container">
+
+<section id="shop" class="page active">
+  <div class="card">
+    <h2>🛍️ 상품</h2>
+    <div id="shopProducts" class="grid"></div>
+  </div>
+
+  <div class="card">
+    <h2>🛒 장바구니</h2>
+    <div id="cart"></div>
+    <div id="cartTotal" class="total">합계: 0원</div>
+    <hr>
+    <label>손님 이름</label>
+    <input id="customerName" placeholder="예: 동생">
+    <label>요청사항</label>
+    <textarea id="customerMemo" rows="3" placeholder="예: 콜라 차갑게 주세요"></textarea>
+    <button class="primary" style="width:100%" onclick="placeOrder()">📨 주문 보내기</button>
+  </div>
+</section>
+
+<section id="orders" class="page">
+  <div class="card">
+    <h2>📋 주문 받기</h2>
+    <div class="notice">이 페이지에서 주문을 접수하고 상태를 바꿔보세요.</div>
+    <div class="actions">
+      <button class="gray" onclick="renderOrders()">🔄 새로고침</button>
+      <button class="danger" onclick="clearOrders()">🗑️ 모든 주문 삭제</button>
+    </div>
+  </div>
+  <div id="ordersList"></div>
+</section>
+
+<section id="products" class="page">
+  <div class="card">
+    <h2>➕ 상품 추가</h2>
+    <div class="form-grid">
+      <div>
+        <label>상품 이름</label>
+        <input id="pName" placeholder="예: 떡볶이">
+      </div>
+      <div>
+        <label>가격</label>
+        <input id="pPrice" type="number" min="0" placeholder="3000">
+      </div>
+      <div>
+        <label>아이콘</label>
+        <input id="pIcon" maxlength="4" placeholder="🌶️">
+      </div>
+      <div>
+        <label>재고</label>
+        <input id="pStock" type="number" min="0" placeholder="10">
+      </div>
+    </div>
+    <button class="primary" onclick="addProduct()">상품 등록</button>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ 상품 관리</h2>
+    <div id="manageProducts"></div>
+  </div>
+
+  <div class="card">
+    <h2>💾 데이터</h2>
+    <p class="small">상품, 장바구니, 주문은 이 브라우저의 localStorage에 저장됩니다.</p>
+    <button class="gray" onclick="exportData()">📤 데이터 백업</button>
+    <button class="danger" onclick="resetAll()">⚠️ 전체 초기화</button>
+  </div>
+</section>
+
+</main>
+
+<div id="modalBack" class="modal-back">
+  <div class="modal">
+    <h2>✏️ 상품 수정</h2>
+    <input id="editId" type="hidden">
+    <label>상품 이름</label>
+    <input id="editName">
+    <label>가격</label>
+    <input id="editPrice" type="number" min="0">
+    <label>아이콘</label>
+    <input id="editIcon" maxlength="4">
+    <label>재고</label>
+    <input id="editStock" type="number" min="0">
+    <div class="actions">
+      <button class="primary" onclick="saveEdit()">저장</button>
+      <button class="gray" onclick="closeModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc,
+         onSnapshot, query, orderBy, writeBatch } from
+         "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from
+         "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+/* Firebase 콘솔에서 받은 값으로 바꾸세요. */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+/* 같은 방 코드를 쓰는 기기끼리 상품/주문을 공유합니다.
+   예: https://.../?room=JIKONG-1234 */
+const params = new URLSearchParams(location.search);
+let room = params.get("room");
+if (!room) {
+  room = prompt("방 코드를 입력하세요. 예: JIKONG-1234") || "DEMO-0000";
+  history.replaceState({}, "", "?room=" + encodeURIComponent(room));
+}
+room = room.trim().toUpperCase();
+
+let db, products = [], orders = [], cart = [];
+
+const $ = id => document.getElementById(id);
+const money = n => Number(n).toLocaleString("ko-KR") + "원";
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+
+function toast(msg) {
+  alert(msg);
+}
+
+function productCol() { return collection(db, "rooms", room, "products"); }
+function orderCol() { return collection(db, "rooms", room, "orders"); }
+
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll("nav button").forEach(x => x.classList.remove("active"));
+    document.getElementById(btn.dataset.page).classList.add("active");
+    btn.classList.add("active");
+    if (btn.dataset.page === "shop") renderShop();
+    if (btn.dataset.page === "orders") renderOrders();
+    if (btn.dataset.page === "products") renderManageProducts();
+  });
+});
+
+async function start() {
+  if (firebaseConfig.apiKey.startsWith("YOUR_") ||
+      firebaseConfig.projectId.startsWith("YOUR_")) {
+    $("connection").textContent = "⚠️ Firebase 설정 필요";
+    return;
+  }
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    await signInAnonymously(getAuth(app));
+    $("connection").textContent = "🟢 공유 중 · 방 " + room;
+
+    onSnapshot(query(productCol(), orderBy("name")), snap => {
+      products = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      renderShop();
+      renderManageProducts();
+    });
+
+    onSnapshot(query(orderCol(), orderBy("createdAt", "desc")), snap => {
+      orders = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      renderOrders();
+    });
+  } catch (e) {
+    console.error(e);
+    $("connection").textContent = "🔴 연결 실패";
+    alert("Firebase 연결에 실패했습니다.\n콘솔 설정과 익명 로그인을 확인하세요.");
+  }
+}
+
+function renderShop() {
+  const el = $("shopProducts");
+  if (!products.length) {
+    el.innerHTML = '<div class="empty">등록된 상품이 없습니다.<br>상품 관리에서 추가하세요.</div>';
+  } else {
+    el.innerHTML = products.map(p => `
+      <div class="product">
+        <div class="icon">${esc(p.icon || "📦")}</div>
+        <h3>${esc(p.name)}</h3>
+        <div class="price">${money(p.price)}</div>
+        <div class="small">재고: ${p.stock}개</div><br>
+        <button class="add" ${p.stock <= 0 ? "disabled" : ""} onclick="addCart('${p.id}')">
+          ${p.stock <= 0 ? "품절" : "🛒 담기"}
+        </button>
+      </div>`).join("");
+  }
+  renderCart();
+}
+
+window.addCart = id => {
+  const p = products.find(x => x.id === id);
+  if (!p || p.stock <= 0) return;
+  const i = cart.find(x => x.id === id);
+  if (i) {
+    if (i.qty >= p.stock) return toast("재고가 부족합니다.");
+    i.qty++;
+  } else cart.push({id, qty:1});
+  renderCart();
+};
+
+window.changeQuantity = (i, amount) => {
+  cart[i].quantity += amount;
+  if (cart[i].quantity <= 0) cart.splice(i, 1);
+  renderCart();
+};
+
+window.removeItem = i => {
+  cart.splice(i, 1);
+  renderCart();
+};
+
+function renderCart() {
+  const el = $("cartList");
+  let total = 0;
+  if (!cart.length) {
+    el.innerHTML = '<div class="empty">장바구니가 비어 있습니다.</div>';
+  } else {
+    el.innerHTML = cart.map((item, i) => {
+      const p = products.find(x => x.id === item.id);
+      if (!p) return "";
+      const sub = p.price * item.qty;
+      total += sub;
+      return `<div class="cart-item">
+        <div><strong>${esc(p.name)}</strong><br>${money(p.price)} × ${item.qty} = ${money(sub)}</div>
+        <div class="quantity">
+          <button onclick="changeCart('${p.id}',-1)">−</button>
+          <span>${item.qty}</span>
+          <button onclick="changeCart('${p.id}',1)">+</button>
+          <button onclick="removeCart('${p.id}')">삭제</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  $("total").textContent = total.toLocaleString("ko-KR");
+}
+window.changeCart = (id, n) => {
+  const i = cart.find(x => x.id === id);
+  const p = products.find(x => x.id === id);
+  if (!i || !p) return;
+  i.qty += n;
+  if (i.qty > p.stock) i.qty = p.stock;
+  if (i.qty <= 0) cart = cart.filter(x => x.id !== id);
+  renderCart();
+};
+window.removeCart = id => {
+  cart = cart.filter(x => x.id !== id);
+  renderCart();
+};
+
+window.submitOrder = async () => {
+  if (!db) return toast("Firebase 설정을 먼저 해주세요.");
+  if (!cart.length) return toast("상품을 먼저 선택해주세요.");
+
+  const name = $("name").value.trim() || "손님";
+  const memo = $("memo").value.trim();
+  const items = [];
+
+  for (const c of cart) {
+    const p = products.find(x => x.id === c.id);
+    if (!p || c.qty > p.stock) return toast("재고가 부족합니다.");
+    items.push({productId:p.id, name:p.name, icon:p.icon, price:p.price,
+                quantity:c.qty, subtotal:p.price*c.qty});
+  }
+
+  const total = items.reduce((s, x) => s + x.subtotal, 0);
+  const batch = writeBatch(db);
+
+  for (const i of items) {
+    const p = products.find(x => x.id === i.productId);
+    batch.update(doc(db, "rooms", room, "products", p.id), {stock:p.stock-i.quantity});
+  }
+
+  const ref = doc(orderCol());
+  batch.set(ref, {
+    orderNo: "ORD-" + Date.now().toString().slice(-8),
+    customer:name, memo, items, total,
+    status:"접수", createdAt:Date.now()
+  });
+
+  await batch.commit();
+  cart = [];
+  $("name").value = "";
+  $("memo").value = "";
+  renderCart();
+  toast("주문이 접수되었습니다!");
+};
+
+function renderOrders() {
+  const el = $("ordersList");
+  if (!orders.length) {
+    el.innerHTML = '<div class="card empty">주문이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = orders.map(o => `
+    <div class="card">
+      <div class="cart-item">
+        <div><strong>${esc(o.orderNo)}</strong><br>
+        <span class="small">${esc(o.customer)} · ${new Date(o.createdAt).toLocaleString("ko-KR")}</span></div>
+        <span class="badge">${esc(o.status)}</span>
+      </div>
+      ${o.items.map(i => `<div class="cart-item">
+        <span>${esc(i.icon)} ${esc(i.name)} × ${i.quantity}</span>
+        <b>${money(i.subtotal)}</b>
+      </div>`).join("")}
+      ${o.memo ? `<p>📝 ${esc(o.memo)}</p>` : ""}
+      <div class="total">합계: ${money(o.total)}</div><br>
+      <button class="primary" onclick="setStatus('${o.id}','접수')">📥 접수</button>
+      <button onclick="setStatus('${o.id}','준비 중')">👨‍🍳 준비 중</button>
+      <button class="success" onclick="setStatus('${o.id}','완료')">✅ 완료</button>
+      <button class="danger" onclick="setStatus('${o.id}','취소')">❌ 취소</button>
+      <button onclick="deleteOrder('${o.id}')">🗑️ 삭제</button>
+    </div>`).join("");
+}
+window.setStatus = async (id, status) =>
+  updateDoc(doc(db, "rooms", room, "orders", id), {status});
+window.deleteOrder = async id => {
+  if (confirm("이 주문을 삭제할까요?")) await deleteDoc(doc(db, "rooms", room, "orders", id));
+};
+window.clearOrders = async () => {
+  if (!orders.length || !confirm("모든 주문을 삭제할까요?")) return;
+  const batch = writeBatch(db);
+  orders.forEach(o => batch.delete(doc(db, "rooms", room, "orders", o.id)));
+  await batch.commit();
+};
+
+function renderManageProducts() {
+  const el = $("manageProducts");
+  if (!products.length) {
+    el.innerHTML = '<div class="empty">상품이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = products.map(p => `
+    <div class="manage-row">
+      <div><strong>${esc(p.icon)} ${esc(p.name)}</strong><br>
+      <span class="small">${money(p.price)} · 재고 ${p.stock}개</span></div>
+      <div>
+        <button onclick="editProduct('${p.id}')">✏️ 수정</button>
+        <button class="danger" onclick="deleteProduct('${p.id}')">🗑️ 삭제</button>
+      </div>
+    </div>`).join("");
+}
+
+window.addProduct = async () => {
+  if (!db) return toast("Firebase 설정을 먼저 해주세요.");
+  const name = prompt("상품 이름");
+  if (!name) return;
+  const price = Number(prompt("가격", "3000"));
+  const icon = prompt("아이콘", "📦") || "📦";
+  const stock = Number(prompt("재고", "10"));
+  if (!Number.isFinite(price) || price < 0 || !Number.isFinite(stock) || stock < 0)
+    return toast("입력값이 올바르지 않습니다.");
+  const id = crypto.randomUUID();
+  await setDoc(doc(db, "rooms", room, "products", id),
+    {name, price, icon, stock:Math.floor(stock)});
+};
+window.editProduct = async id => {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const name = prompt("상품 이름", p.name); if (name === null) return;
+  const price = Number(prompt("가격", p.price));
+  const icon = prompt("아이콘", p.icon) || "📦";
+  const stock = Number(prompt("재고", p.stock));
+  if (!name || !Number.isFinite(price) || price < 0 ||
+      !Number.isFinite(stock) || stock < 0) return toast("입력값이 올바르지 않습니다.");
+  await updateDoc(doc(db, "rooms", room, "products", id),
+    {name, price, icon, stock:Math.floor(stock)});
+};
+window.deleteProduct = async id => {
+  const p = products.find(x => x.id === id);
+  if (p && confirm(`"${p.name}" 상품을 삭제할까요?`))
+    await deleteDoc(doc(db, "rooms", room, "products", id));
+};
+
+start();
+</script>
+
+</body>
+</html>
+
