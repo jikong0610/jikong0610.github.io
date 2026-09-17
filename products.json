@@ -1,0 +1,29 @@
+{
+  "store": {
+    "name": "JIKONG STORE",
+    "currency": "KRW"
+  },
+  "products": [
+    {
+      "id": "burger",
+      "name": "햄버거",
+      "icon": "🍔",
+      "price": 5000,
+      "stock": 20
+    },
+    {
+      "id": "pizza",
+      "name": "피자",
+      "icon": "🍕",
+      "price": 8000,
+      "stock": 10
+    },
+    {
+      "id": "cola",
+      "name": "콜라",
+      "icon": "🥤",
+      "price": 1500,
+      "stock": 30
+    }
+  ]
+}
