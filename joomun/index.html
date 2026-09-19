@@ -438,68 +438,48 @@ async function() {
     button.disabled = true;
 
     button.textContent =
-        "주문 저장 중...";
-
-
+        "주문 저장중..."
     try {
+    const savePromise = addDoc(
+        collection(db, "orders"),
+        {
+            name: name,
+            items: items,
+            total: total,
+            status: "접수",
+            createdAt: serverTimestamp()
+        }
+    );
 
-        await addDoc(
-            collection(db, "orders"),
-            {
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            reject(
+                new Error(
+                    "Firebase 응답 시간이 10초를 초과했습니다."
+                )
+            );
+        }, 10000);
+    });
 
-                name: name,
+    await Promise.race([
+        savePromise,
+        timeoutPromise
+    ]);
 
-                items: items,
+    showMessage(
+        "✅ 주문이 접수되었습니다!",
+        false
+    );
 
-                total: total,
+} catch (error) {
 
-                status: "접수",
+    console.error("Firebase 오류:", error);
 
-                createdAt:
-                    serverTimestamp()
-
-            }
-        );
-
-
-        showMessage(
-            `✅ 주문이 접수되었습니다! 총 ${total.toLocaleString()}원`,
-            false
-        );
-
-
-        document.getElementById(
-            "name"
-        ).value = "";
-
-
-        products.forEach(product => {
-
-            cart[product.id] = 0;
-
-            document.getElementById(
-                `qty-${product.id}`
-            ).textContent = "0";
-
-        });
-
-
-        updateTotal();
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        showMessage(
-            "❌ 주문 저장 실패\n" +
-            error.message,
-            true
-        );
-
-    }
-
-
+    showMessage(
+        "❌ 주문 실패: " + error.message,
+        true
+    );
+}
     button.disabled = false;
 
     button.textContent =
