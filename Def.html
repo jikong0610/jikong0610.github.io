@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTML Defense</title>
+<title>Mini Tower Defense</title>
 
 <style>
 * {
@@ -11,275 +11,713 @@
     user-select: none;
 }
 
-body {
+html, body {
     margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
     background: #111;
     color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
 }
 
-#top {
-    height: 70px;
+#topbar {
+    height: 64px;
     background: #202020;
+    border-bottom: 2px solid #444;
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    border-bottom: 2px solid #444;
-    font-size: 20px;
+    gap: 22px;
+    padding: 0 16px;
+    font-size: 17px;
+}
+
+#title {
+    font-weight: bold;
+    font-size: 21px;
+    margin-right: auto;
 }
 
 #game {
     position: relative;
     width: 100vw;
-    height: calc(100vh - 70px);
-    background:
-        linear-gradient(#1d3b1d 2px, transparent 2px),
-        linear-gradient(90deg, #1d3b1d 2px, transparent 2px),
-        #244d24;
-    background-size: 40px 40px;
+    height: calc(100vh - 64px);
     overflow: hidden;
+
+    background:
+        linear-gradient(#315f31 1px, transparent 1px),
+        linear-gradient(90deg, #315f31 1px, transparent 1px),
+        #397039;
+
+    background-size: 40px 40px;
 }
 
-/* 길 */
-#road {
+/* =========================
+   길
+========================= */
+
+.path {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 45%;
-    height: 100px;
-    background: #555;
-    border-top: 5px solid #777;
-    border-bottom: 5px solid #777;
+    background: #777;
+    border: 4px solid #999;
+    z-index: 1;
 }
 
-/* 기지 */
+.path.horizontal {
+    height: 80px;
+}
+
+.path.vertical {
+    width: 80px;
+}
+
+/* =========================
+   기지
+========================= */
+
 #base {
     position: absolute;
-    left: 20px;
-    top: calc(45% + 10px);
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+
     width: 80px;
     height: 80px;
-    background: #888;
-    border: 5px solid #ccc;
+
+    background: #555;
+    border: 5px solid #ddd;
+    border-radius: 12px;
+
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+
     font-size: 40px;
     z-index: 10;
 }
 
-/* 적 */
-.enemy {
+/* =========================
+   타워 설치 칸
+========================= */
+
+.buildSpot {
     position: absolute;
-    width: 45px;
-    height: 45px;
-    background: #d33;
-    border: 3px solid #ff7777;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    z-index: 5;
+
+    width: 58px;
+    height: 58px;
+
+    background: rgba(0, 0, 0, .18);
+    border: 2px dashed rgba(255,255,255,.45);
+    border-radius: 10px;
+
+    cursor: pointer;
+    z-index: 3;
 }
 
-.hpbar {
-    position: absolute;
-    top: -12px;
-    left: 0;
-    width: 45px;
-    height: 7px;
-    background: #300;
+.buildSpot:hover {
+    background: rgba(255,255,255,.18);
 }
 
-.hpfill {
-    height: 100%;
-    background: #0f0;
-}
+/* =========================
+   타워
+========================= */
 
-/* 포탑 */
 .tower {
     position: absolute;
-    width: 55px;
-    height: 55px;
-    background: #2969a8;
-    border: 4px solid #78baff;
+
+    width: 58px;
+    height: 58px;
+
     border-radius: 50%;
+    border: 4px solid #ddd;
+
     display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 25px;
-    z-index: 6;
+    align-items: center;
+
+    font-size: 28px;
+
+    z-index: 8;
+
+    cursor: pointer;
+}
+
+.tower.archer {
+    background: #2879c7;
+}
+
+.tower.cannon {
+    background: #8c552e;
+}
+
+.tower.magic {
+    background: #7439b7;
 }
 
 .range {
     position: absolute;
-    width: 180px;
-    height: 180px;
-    border: 2px dashed rgba(255,255,255,.25);
+
+    width: 170px;
+    height: 170px;
+
+    border: 2px dashed rgba(255,255,255,.35);
     border-radius: 50%;
-    pointer-events: none;
+
     transform: translate(-50%, -50%);
+
+    pointer-events: none;
+
+    z-index: 2;
 }
 
-/* 총알 */
-.bullet {
+/* =========================
+   적
+========================= */
+
+.enemy {
     position: absolute;
-    width: 10px;
-    height: 10px;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 8px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 23px;
+
+    z-index: 6;
+}
+
+.enemy.normal {
+    background: #b72e2e;
+    border: 3px solid #ff6666;
+}
+
+.enemy.fast {
+    background: #bd741d;
+    border: 3px solid #ffc05c;
+}
+
+.enemy.tank {
+    background: #563c36;
+    border: 4px solid #b99585;
+    width: 52px;
+    height: 52px;
+}
+
+.enemy.boss {
+    background: #42144d;
+    border: 5px solid #d36eea;
+    width: 65px;
+    height: 65px;
+    font-size: 35px;
+}
+
+/* HP */
+
+.hp {
+    position: absolute;
+    top: -10px;
+    left: 0;
+
+    width: 100%;
+    height: 6px;
+
+    background: #350000;
+}
+
+.hpFill {
+    width: 100%;
+    height: 100%;
+    background: #31e031;
+}
+
+/* =========================
+   탄환
+========================= */
+
+.projectile {
+    position: absolute;
+
+    width: 9px;
+    height: 9px;
+
     background: yellow;
     border-radius: 50%;
-    z-index: 7;
-}
 
-/* 하단 UI */
-#shop {
-    position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(20,20,20,.9);
-    padding: 10px;
-    border: 2px solid #555;
-    border-radius: 10px;
     z-index: 20;
 }
 
+.projectile.cannon {
+    width: 13px;
+    height: 13px;
+    background: #ff8a35;
+}
+
+.projectile.magic {
+    width: 11px;
+    height: 11px;
+    background: #d875ff;
+}
+
+/* =========================
+   하단 상점
+========================= */
+
+#shop {
+    position: absolute;
+
+    bottom: 12px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    background: rgba(20,20,20,.95);
+
+    padding: 9px;
+
+    border: 2px solid #555;
+    border-radius: 12px;
+
+    z-index: 50;
+
+    display: flex;
+    gap: 6px;
+}
+
 button {
-    background: #2878c8;
-    color: white;
     border: 0;
-    padding: 12px 20px;
-    margin: 3px;
-    border-radius: 6px;
-    font-size: 16px;
+    border-radius: 7px;
+
+    padding: 10px 14px;
+
+    color: white;
+    background: #287bc5;
+
+    font-size: 14px;
+
     cursor: pointer;
 }
 
 button:hover {
-    background: #3e91e8;
+    background: #3b93df;
 }
 
 button:disabled {
     background: #444;
+    color: #999;
     cursor: not-allowed;
 }
 
+/* =========================
+   선택창
+========================= */
+
+#upgradePanel {
+    position: absolute;
+
+    right: 15px;
+    top: 15px;
+
+    width: 220px;
+
+    padding: 14px;
+
+    background: rgba(20,20,20,.95);
+
+    border: 2px solid #555;
+    border-radius: 10px;
+
+    display: none;
+
+    z-index: 60;
+}
+
+#upgradePanel h3 {
+    margin-top: 0;
+}
+
+/* =========================
+   메시지
+========================= */
+
 #message {
     position: absolute;
+
     left: 50%;
-    top: 35%;
+    top: 45%;
+
     transform: translate(-50%, -50%);
-    font-size: 50px;
-    font-weight: bold;
+
     text-align: center;
+
+    font-size: 42px;
+    font-weight: bold;
+
     display: none;
+
     z-index: 100;
+}
+
+.small {
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+/* 모바일 */
+@media(max-width:700px) {
+
+    #topbar {
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    #title {
+        font-size: 15px;
+    }
+
+    #shop {
+        width: 96%;
+        justify-content: center;
+    }
+
+    button {
+        padding: 9px 7px;
+        font-size: 12px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div id="top">
-    <div>🏰 HTML Defense</div>
-    <div>❤️ <span id="baseHP">100</span></div>
-    <div>💰 <span id="gold">100</span></div>
-    <div>🌊 Wave <span id="wave">1</span></div>
-    <div>👾 <span id="alive">0</span></div>
+<div id="topbar">
+
+    <div id="title">🏰 Mini Defense</div>
+
+    <div>❤️ <span id="hpText">100</span></div>
+
+    <div>💰 <span id="goldText">150</span></div>
+
+    <div>🌊 <span id="waveText">1</span></div>
+
+    <div>👾 <span id="enemyText">0</span></div>
+
 </div>
+
 
 <div id="game">
 
-    <div id="road"></div>
+    <!-- 길 -->
+
+    <div
+        class="path horizontal"
+        style="left:0;top:calc(50% - 40px);width:100%;">
+    </div>
+
+
+    <div
+        class="path vertical"
+        style="left:58%;top:20%;height:30%;">
+    </div>
+
+
+    <div
+        class="path horizontal"
+        style="left:30%;top:20%;width:30%;">
+    </div>
+
+
+    <!-- 기지 -->
 
     <div id="base">🏰</div>
 
-    <div id="shop">
-        <button id="towerBtn">🔵 포탑 설치 — 💰50</button>
-        <button id="waveBtn">▶ 다음 웨이브</button>
+
+    <!-- 설치 칸 -->
+
+    <div class="buildSpot" style="left:15%;top:25%" data-x="15" data-y="25"></div>
+    <div class="buildSpot" style="left:25%;top:65%" data-x="25" data-y="65"></div>
+
+    <div class="buildSpot" style="left:38%;top:30%" data-x="38" data-y="30"></div>
+    <div class="buildSpot" style="left:45%;top:65%" data-x="45" data-y="65"></div>
+
+    <div class="buildSpot" style="left:55%;top:65%" data-x="55" data-y="65"></div>
+    <div class="buildSpot" style="left:68%;top:30%" data-x="68" data-y="30"></div>
+
+    <div class="buildSpot" style="left:78%;top:65%" data-x="78" data-y="65"></div>
+
+
+    <!-- 업그레이드 -->
+
+    <div id="upgradePanel">
+
+        <h3>🔧 타워 업그레이드</h3>
+
+        <div>
+            레벨:
+            <span id="towerLevel">1</span>
+        </div>
+
+        <div>
+            공격력:
+            <span id="towerDamage">20</span>
+        </div>
+
+        <div>
+            사거리:
+            <span id="towerRange">170</span>
+        </div>
+
+        <br>
+
+        <button id="upgradeButton">
+            ⬆️ 업그레이드 💰50
+        </button>
+
+        <button id="sellButton">
+            💰 판매
+        </button>
+
     </div>
+
+
+    <!-- 상점 -->
+
+    <div id="shop">
+
+        <button id="archerButton">
+            🏹 궁수 💰50
+        </button>
+
+        <button id="cannonButton">
+            💣 대포 💰80
+        </button>
+
+        <button id="magicButton">
+            🔮 마법 💰100
+        </button>
+
+        <button id="waveButton">
+            ▶ 웨이브
+        </button>
+
+    </div>
+
 
     <div id="message"></div>
 
 </div>
 
+
 <script>
+
+/* ==================================================
+   기본 변수
+================================================== */
 
 const game = document.getElementById("game");
 
-let gold = 100;
+let gold = 150;
 let baseHP = 100;
 let wave = 1;
 
 let enemies = [];
 let towers = [];
-let bullets = [];
+let projectiles = [];
+
+let selectedTower = null;
 
 let spawning = false;
 let gameOver = false;
 
-const enemySpeed = 1.0;
-const towerCost = 50;
 
-/* =========================
+/* ==================================================
    UI
-========================= */
+================================================== */
 
 function updateUI() {
-    document.getElementById("gold").textContent = gold;
-    document.getElementById("baseHP").textContent = baseHP;
-    document.getElementById("wave").textContent = wave;
-    document.getElementById("alive").textContent = enemies.length;
 
-    document.getElementById("towerBtn").disabled =
-        gold < towerCost || gameOver;
+    document.getElementById("hpText").textContent = baseHP;
+
+    document.getElementById("goldText").textContent = gold;
+
+    document.getElementById("waveText").textContent = wave;
+
+    document.getElementById("enemyText").textContent =
+        enemies.length;
 }
 
-/* =========================
+
+/* ==================================================
+   경로
+================================================== */
+
+/*
+    오른쪽
+      ↓
+    상단길
+      ↓
+    중앙길 → 기지
+*/
+
+function getPathPosition(enemy) {
+
+    const w = game.clientWidth;
+    const h = game.clientHeight;
+
+    const points = [
+
+        [w - 30, h * .20],
+
+        [w * .58, h * .20],
+
+        [w * .58, h * .50],
+
+        [90, h * .50]
+
+    ];
+
+    let segment = enemy.segment;
+
+    if (segment >= points.length - 1) {
+        return points[points.length - 1];
+    }
+
+    const a = points[segment];
+    const b = points[segment + 1];
+
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    enemy.distance += enemy.speed;
+
+    let t = enemy.distance / dist;
+
+    if (t >= 1) {
+
+        enemy.segment++;
+
+        enemy.distance = 0;
+
+        return points[segment + 1];
+    }
+
+    return [
+
+        a[0] + dx * t,
+
+        a[1] + dy * t
+
+    ];
+}
+
+
+/* ==================================================
    적 생성
-========================= */
+================================================== */
 
-function spawnEnemy() {
+function spawnEnemy(type = "normal") {
 
-    if (gameOver) return;
+    let hp;
+    let speed;
+    let reward;
+    let icon;
+
+    if (type === "fast") {
+
+        hp = 35 + wave * 8;
+        speed = 2.5 + wave * .08;
+        reward = 18;
+        icon = "⚡";
+
+    } else if (type === "tank") {
+
+        hp = 160 + wave * 30;
+        speed = .65 + wave * .03;
+        reward = 35;
+        icon = "🛡️";
+
+    } else if (type === "boss") {
+
+        hp = 1000 + wave * 250;
+        speed = .45;
+        reward = 200;
+        icon = "👹";
+
+    } else {
+
+        hp = 60 + wave * 15;
+        speed = 1.1 + wave * .04;
+        reward = 12;
+        icon = "👾";
+    }
+
 
     const enemy = {
-        x: game.clientWidth - 60,
-        y: game.clientHeight * 0.45 + 28,
-        hp: 40 + wave * 10,
-        maxHP: 40 + wave * 10,
-        speed: enemySpeed + wave * 0.08,
-        damage: 5 + wave,
+
+        type,
+
+        hp,
+        maxHP: hp,
+
+        speed,
+
+        reward,
+
+        segment: 0,
+
+        distance: 0,
+
+        x: game.clientWidth - 30,
+
+        y: game.clientHeight * .20,
+
         el: null
+
     };
+
 
     const el = document.createElement("div");
 
-    el.className = "enemy";
-    el.textContent = "👾";
+    el.className = "enemy " + type;
 
-    const hpbar = document.createElement("div");
-    hpbar.className = "hpbar";
+    el.textContent = icon;
 
-    const hpfill = document.createElement("div");
-    hpfill.className = "hpfill";
 
-    hpbar.appendChild(hpfill);
-    el.appendChild(hpbar);
+    const hp = document.createElement("div");
+
+    hp.className = "hp";
+
+
+    const fill = document.createElement("div");
+
+    fill.className = "hpFill";
+
+    hp.appendChild(fill);
+
+    el.appendChild(hp);
+
 
     game.appendChild(el);
 
+
     enemy.el = el;
-    enemy.hpfill = hpfill;
+
+    enemy.hpFill = fill;
+
 
     enemies.push(enemy);
 }
 
-/* =========================
+
+/* ==================================================
    웨이브
-========================= */
+================================================== */
 
 async function startWave() {
 
@@ -287,259 +725,654 @@ async function startWave() {
 
     spawning = true;
 
-    const count = 5 + wave * 2;
+
+    let count = 5 + wave * 2;
+
+
+    if (wave % 5 === 0) {
+
+        spawnEnemy("boss");
+
+    }
+
 
     for (let i = 0; i < count; i++) {
 
         if (gameOver) break;
 
-        spawnEnemy();
+
+        let type = "normal";
+
+
+        if (wave >= 3 && Math.random() < .25) {
+
+            type = "fast";
+
+        }
+
+
+        if (wave >= 4 && Math.random() < .15) {
+
+            type = "tank";
+
+        }
+
+
+        spawnEnemy(type);
+
 
         await new Promise(
-            resolve => setTimeout(resolve, 700)
+            r => setTimeout(r, 650)
         );
     }
+
 
     spawning = false;
 }
 
-/* =========================
-   포탑 설치
-========================= */
 
-document.getElementById("towerBtn").onclick = () => {
+/* ==================================================
+   타워 생성
+================================================== */
 
-    if (gold < towerCost || gameOver) return;
+function buildTower(spot, type) {
 
-    gold -= towerCost;
+    let cost;
+
+    if (type === "archer") cost = 50;
+    if (type === "cannon") cost = 80;
+    if (type === "magic") cost = 100;
+
+
+    if (gold < cost) return;
+
+
+    gold -= cost;
+
+
+    const rect = spot.getBoundingClientRect();
+
+    const gameRect = game.getBoundingClientRect();
+
+
+    const x =
+        rect.left -
+        gameRect.left;
+
+    const y =
+        rect.top -
+        gameRect.top;
+
 
     const tower = {
-        x: 120 + Math.random() * (game.clientWidth - 250),
-        y: 100 + Math.random() * (game.clientHeight - 250),
-        range: 180,
-        damage: 20,
+
+        type,
+
+        x,
+
+        y,
+
+        level: 1,
+
+        damage:
+            type === "archer" ? 20 :
+            type === "cannon" ? 35 :
+            50,
+
+        range:
+            type === "archer" ? 170 :
+            type === "cannon" ? 150 :
+            190,
+
         cooldown: 0,
+
+        cost,
+
         el: null
+
     };
+
 
     const el = document.createElement("div");
 
-    el.className = "tower";
-    el.textContent = "🔵";
+    el.className = "tower " + type;
 
-    el.style.left = tower.x + "px";
-    el.style.top = tower.y + "px";
+
+    el.textContent =
+        type === "archer" ? "🏹" :
+        type === "cannon" ? "💣" :
+        "🔮";
+
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
 
     game.appendChild(el);
 
+
     tower.el = el;
 
+
     towers.push(tower);
+
+
+    spot.style.display = "none";
+
+
+    el.onclick = e => {
+
+        e.stopPropagation();
+
+        selectTower(tower);
+
+    };
+
+
+    updateUI();
+}
+
+
+/* ==================================================
+   설치 칸 클릭
+================================================== */
+
+document.querySelectorAll(".buildSpot").forEach(spot => {
+
+    spot.onclick = () => {
+
+        if (gameOver) return;
+
+
+        const type =
+            prompt(
+                "설치할 타워\n\n1 = 🏹 궁수 (50)\n2 = 💣 대포 (80)\n3 = 🔮 마법 (100)"
+            );
+
+
+        if (type === "1") {
+
+            buildTower(spot, "archer");
+
+        } else if (type === "2") {
+
+            buildTower(spot, "cannon");
+
+        } else if (type === "3") {
+
+            buildTower(spot, "magic");
+        }
+    };
+
+});
+
+
+/* ==================================================
+   타워 선택
+================================================== */
+
+function selectTower(tower) {
+
+    selectedTower = tower;
+
+
+    document.getElementById(
+        "upgradePanel"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "towerLevel"
+    ).textContent = tower.level;
+
+
+    document.getElementById(
+        "towerDamage"
+    ).textContent = tower.damage;
+
+
+    document.getElementById(
+        "towerRange"
+    ).textContent = tower.range;
+}
+
+
+/* ==================================================
+   업그레이드
+================================================== */
+
+document.getElementById(
+    "upgradeButton"
+).onclick = () => {
+
+    if (!selectedTower) return;
+
+
+    const cost =
+        50 * selectedTower.level;
+
+
+    if (gold < cost) return;
+
+
+    gold -= cost;
+
+
+    selectedTower.level++;
+
+    selectedTower.damage =
+        Math.round(
+            selectedTower.damage * 1.45
+        );
+
+    selectedTower.range += 15;
+
+
+    selectTower(selectedTower);
 
     updateUI();
 };
 
-/* =========================
-   적 찾기
-========================= */
+
+/* ==================================================
+   판매
+================================================== */
+
+document.getElementById(
+    "sellButton"
+).onclick = () => {
+
+    if (!selectedTower) return;
+
+
+    gold +=
+        Math.floor(
+            selectedTower.cost * .7
+        );
+
+
+    selectedTower.el.remove();
+
+
+    towers =
+        towers.filter(
+            t => t !== selectedTower
+        );
+
+
+    document.getElementById(
+        "upgradePanel"
+    ).style.display = "none";
+
+
+    selectedTower = null;
+
+
+    updateUI();
+};
+
+
+/* ==================================================
+   타워 공격 대상
+================================================== */
 
 function findTarget(tower) {
 
     let target = null;
-    let bestDistance = Infinity;
+
+    let best = Infinity;
+
 
     for (const enemy of enemies) {
 
-        const dx = enemy.x - tower.x;
-        const dy = enemy.y - tower.y;
+        const dx =
+            enemy.x -
+            (tower.x + 29);
 
-        const distance = Math.sqrt(
-            dx * dx + dy * dy
-        );
+        const dy =
+            enemy.y -
+            (tower.y + 29);
+
+
+        const d =
+            Math.sqrt(
+                dx*dx + dy*dy
+            );
+
 
         if (
-            distance <= tower.range &&
-            distance < bestDistance
+            d <= tower.range &&
+            d < best
         ) {
-            bestDistance = distance;
+
+            best = d;
+
             target = enemy;
         }
     }
 
+
     return target;
 }
 
-/* =========================
-   총알
-========================= */
 
-function shoot(tower, enemy) {
+/* ==================================================
+   발사
+================================================== */
 
-    const bullet = {
+function fire(tower, enemy) {
 
-        x: tower.x + 27,
-        y: tower.y + 27,
+    const p = {
+
+        x: tower.x + 29,
+
+        y: tower.y + 29,
 
         target: enemy,
 
-        speed: 8,
+        speed:
+            tower.type === "magic"
+            ? 9
+            : tower.type === "cannon"
+            ? 6
+            : 10,
 
         damage: tower.damage,
+
+        type: tower.type,
 
         el: null
     };
 
-    const el = document.createElement("div");
 
-    el.className = "bullet";
+    const el =
+        document.createElement("div");
+
+
+    el.className =
+        "projectile " + tower.type;
+
 
     game.appendChild(el);
 
-    bullet.el = el;
 
-    bullets.push(bullet);
+    p.el = el;
+
+
+    projectiles.push(p);
 }
 
-/* =========================
-   게임 루프
-========================= */
 
-function loop() {
+/* ==================================================
+   타워 공격 주기
+================================================== */
 
-    if (gameOver) return;
+function towerAttack(tower) {
 
-    /* 적 이동 */
+    if (tower.cooldown > 0) {
 
-    for (let i = enemies.length - 1; i >= 0; i--) {
+        tower.cooldown--;
+
+        return;
+    }
+
+
+    const target =
+        findTarget(tower);
+
+
+    if (!target) return;
+
+
+    fire(tower, target);
+
+
+    tower.cooldown =
+        tower.type === "archer"
+        ? 22
+        : tower.type === "cannon"
+        ? 45
+        : 30;
+}
+
+
+/* ==================================================
+   투사체 업데이트
+================================================== */
+
+function updateProjectiles() {
+
+    for (
+        let i = projectiles.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const p = projectiles[i];
+
+
+        if (
+            !p.target ||
+            !enemies.includes(p.target)
+        ) {
+
+            p.el.remove();
+
+            projectiles.splice(i, 1);
+
+            continue;
+        }
+
+
+        const dx =
+            p.target.x -
+            p.x;
+
+        const dy =
+            p.target.y -
+            p.y;
+
+
+        const distance =
+            Math.sqrt(
+                dx*dx + dy*dy
+            );
+
+
+        if (distance < 12) {
+
+            p.target.hp -= p.damage;
+
+
+            /*
+              대포는 범위 공격
+            */
+
+            if (p.type === "cannon") {
+
+                for (const e of enemies) {
+
+                    const ex =
+                        e.x -
+                        p.target.x;
+
+                    const ey =
+                        e.y -
+                        p.target.y;
+
+
+                    if (
+                        Math.sqrt(
+                            ex*ex + ey*ey
+                        ) < 65
+                    ) {
+
+                        e.hp -=
+                            p.damage * .45;
+                    }
+                }
+            }
+
+
+            p.el.remove();
+
+            projectiles.splice(i, 1);
+
+            continue;
+        }
+
+
+        p.x +=
+            dx / distance *
+            p.speed;
+
+
+        p.y +=
+            dy / distance *
+            p.speed;
+
+
+        p.el.style.left =
+            p.x + "px";
+
+        p.el.style.top =
+            p.y + "px";
+    }
+}
+
+
+/* ==================================================
+   적 업데이트
+================================================== */
+
+function updateEnemies() {
+
+    for (
+        let i = enemies.length - 1;
+        i >= 0;
+        i--
+    ) {
 
         const enemy = enemies[i];
 
-        enemy.x -= enemy.speed;
 
-        enemy.el.style.left = enemy.x + "px";
-        enemy.el.style.top = enemy.y + "px";
+        /*
+          죽음
+        */
 
-        enemy.hpfill.style.width =
-            Math.max(
-                0,
-                enemy.hp / enemy.maxHP * 100
-            ) + "%";
+        if (enemy.hp <= 0) {
 
-        /* 기지 도착 */
+            gold += enemy.reward;
 
-        if (enemy.x <= 90) {
-
-            baseHP -= enemy.damage;
 
             enemy.el.remove();
+
+
             enemies.splice(i, 1);
 
+
+            continue;
+        }
+
+
+        const pos =
+            getPathPosition(enemy);
+
+
+        enemy.x = pos[0];
+
+        enemy.y = pos[1];
+
+
+        enemy.el.style.left =
+            enemy.x - 21 + "px";
+
+        enemy.el.style.top =
+            enemy.y - 21 + "px";
+
+
+        enemy.hpFill.style.width =
+            Math.max(
+                0,
+                enemy.hp /
+                enemy.maxHP *
+                100
+            ) + "%";
+
+
+        /*
+          기지 도착
+        */
+
+        if (
+            enemy.segment >= 3
+        ) {
+
+            baseHP -=
+                enemy.type === "boss"
+                ? 40
+                : 10;
+
+
+            enemy.el.remove();
+
+
+            enemies.splice(i, 1);
+
+
             if (baseHP <= 0) {
+
                 baseHP = 0;
+
                 endGame();
             }
         }
     }
-
-    /* 포탑 */
-
-    for (const tower of towers) {
-
-        if (tower.cooldown > 0) {
-            tower.cooldown--;
-            continue;
-        }
-
-        const target = findTarget(tower);
-
-        if (target) {
-
-            shoot(tower, target);
-
-            tower.cooldown = 30;
-        }
-    }
-
-    /* 총알 */
-
-    for (let i = bullets.length - 1; i >= 0; i--) {
-
-        const bullet = bullets[i];
-
-        if (!bullet.target || !enemies.includes(bullet.target)) {
-
-            bullet.el.remove();
-            bullets.splice(i, 1);
-            continue;
-        }
-
-        const dx = bullet.target.x - bullet.x;
-        const dy = bullet.target.y - bullet.y;
-
-        const distance = Math.sqrt(
-            dx * dx + dy * dy
-        );
-
-        if (distance < 10) {
-
-            bullet.target.hp -= bullet.damage;
-
-            bullet.el.remove();
-            bullets.splice(i, 1);
-
-            if (bullet.target.hp <= 0) {
-
-                const index =
-                    enemies.indexOf(bullet.target);
-
-                if (index !== -1) {
-
-                    enemies[index].el.remove();
-                    enemies.splice(index, 1);
-
-                    gold += 15;
-                }
-            }
-
-            continue;
-        }
-
-        bullet.x += dx / distance * bullet.speed;
-        bullet.y += dy / distance * bullet.speed;
-
-        bullet.el.style.left = bullet.x + "px";
-        bullet.el.style.top = bullet.y + "px";
-    }
-
-    updateUI();
-
-    requestAnimationFrame(loop);
 }
 
-/* =========================
+
+/* ==================================================
    게임 오버
-========================= */
+================================================== */
 
 function endGame() {
 
     gameOver = true;
 
+
     const message =
         document.getElementById("message");
 
-    message.innerHTML =
-        "GAME OVER<br><button onclick='location.reload()'>🔄 다시 시작</button>";
 
-    message.style.display = "block";
+    message.innerHTML = `
+        💀 GAME OVER
+        <div class="small">
+            Wave ${wave}
+        </div>
+
+        <button onclick="location.reload()">
+            🔄 다시 시작
+        </button>
+    `;
+
+
+    message.style.display =
+        "block";
 }
 
-/* =========================
-   다음 웨이브
-========================= */
 
-document.getElementById("waveBtn").onclick = () => {
+/* ==================================================
+   웨이브 버튼
+================================================== */
 
-    if (!spawning && enemies.length === 0) {
+document.getElementById(
+    "waveButton"
+).onclick = () => {
+
+    if (
+        enemies.length === 0 &&
+        !spawning
+    ) {
 
         wave++;
 
@@ -547,15 +1380,46 @@ document.getElementById("waveBtn").onclick = () => {
     }
 };
 
-/* =========================
+
+/* ==================================================
+   메인 루프
+================================================== */
+
+function gameLoop() {
+
+    if (!gameOver) {
+
+        updateEnemies();
+
+
+        for (const tower of towers) {
+
+            towerAttack(tower);
+        }
+
+
+        updateProjectiles();
+
+
+        updateUI();
+
+
+        requestAnimationFrame(
+            gameLoop
+        );
+    }
+}
+
+
+/* ==================================================
    시작
-========================= */
+================================================== */
 
 updateUI();
 
 startWave();
 
-loop();
+gameLoop();
 
 </script>
 
