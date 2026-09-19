@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
 <title>주문 관리</title>
 
@@ -16,39 +21,42 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f5f6fa;
-    color: #222;
 }
 
 header {
     background: #222;
     color: white;
-    padding: 20px;
     text-align: center;
+    padding: 22px;
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 900px;
     margin: auto;
     padding: 20px;
 }
 
-.order {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.08);
+#connection {
+    color: #aaa;
 }
 
-.order-header {
+.order {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+}
+
+.order-top {
     display: flex;
     justify-content: space-between;
     gap: 10px;
     flex-wrap: wrap;
 }
 
-.order-name {
-    font-size: 20px;
+.name {
+    font-size: 21px;
     font-weight: bold;
 }
 
@@ -59,14 +67,21 @@ header {
 }
 
 .item {
-    padding: 8px 0;
+    padding: 9px 0;
     border-bottom: 1px solid #eee;
 }
 
 .total {
-    font-size: 20px;
-    font-weight: bold;
     text-align: right;
+    font-size: 21px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
     margin-top: 15px;
 }
 
@@ -86,20 +101,14 @@ button {
     background: #eee;
 }
 
-.buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 15px;
-}
-
 .empty {
     text-align: center;
-    padding: 50px;
     color: #777;
+    padding: 50px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -118,17 +127,13 @@ button {
 <div class="container">
 
 <div id="orders">
-    주문을 불러오는 중...
+    주문 불러오는 중...
 </div>
 
 </div>
 
 
 <script type="module">
-
-/* ============================
-   Firebase
-   ============================ */
 
 import {
     initializeApp
@@ -146,21 +151,31 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-/*
-   👇 index.html과 똑같은 Firebase 설정을 넣으세요.
-*/
+/* Firebase */
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDsmpnhM1PhQYwNZYXOXjKBrZyTUcNd1GI",
-  authDomain: "gun-game-multi.firebaseapp.com",
-  projectId: "gun-game-multi",
-  storageBucket: "gun-game-multi.firebasestorage.app",
-  messagingSenderId: "654895354599",
-  appId: "1:654895354599:web:0a1d5d505619e49d380842",
-  measurementId: "G-051STSK698"
-};
 
+    apiKey:
+        "AIzaSyDsmpnhM1PhQYwNZYXOXjKBrZyTUcNd1GI",
+
+    authDomain:
+        "gun-game-multi.firebaseapp.com",
+
+    projectId:
+        "gun-game-multi",
+
+    storageBucket:
+        "gun-game-multi.firebasestorage.app",
+
+    messagingSenderId:
+        "654895354599",
+
+    appId:
+        "1:654895354599:web:0a1d5d505619e49d380842",
+
+    measurementId:
+        "G-051STSK698"
+};
 
 
 const app =
@@ -170,22 +185,17 @@ const db =
     getFirestore(app);
 
 
-/* ============================
-   주문 실시간 감시
-   ============================ */
-
-const ordersRef =
-    collection(db, "orders");
-
+/* 주문 실시간 감시 */
 
 const ordersQuery =
     query(
-        ordersRef,
+        collection(db, "orders"),
         orderBy("createdAt", "desc")
     );
 
 
 onSnapshot(
+
     ordersQuery,
 
     snapshot => {
@@ -206,22 +216,15 @@ onSnapshot(
         document.getElementById(
             "connection"
         ).textContent =
-            "🔴 연결 오류";
-
-        document.getElementById(
-            "orders"
-        ).innerHTML =
-            `<div class="empty">
-                주문을 불러오지 못했습니다.
-            </div>`;
+            "🔴 연결 실패: " +
+            error.message;
 
     }
+
 );
 
 
-/* ============================
-   주문 표시
-   ============================ */
+/* 주문 표시 */
 
 function renderOrders(snapshot) {
 
@@ -237,7 +240,6 @@ function renderOrders(snapshot) {
             </div>`;
 
         return;
-
     }
 
 
@@ -253,22 +255,18 @@ function renderOrders(snapshot) {
             orderDoc.id;
 
 
-        const div =
-            document.createElement("div");
-
-        div.className = "order";
-
-
-        let itemsHTML = "";
+        let items = "";
 
 
         (order.items || []).forEach(item => {
 
             const subtotal =
-                item.price * item.quantity;
+                Number(item.price) *
+                Number(item.quantity);
 
 
-            itemsHTML += `
+            items += `
+
                 <div class="item">
 
                     ${escapeHTML(item.name)}
@@ -279,51 +277,55 @@ function renderOrders(snapshot) {
                     ${subtotal.toLocaleString()}원
 
                 </div>
+
             `;
 
         });
 
 
-        const time =
-            order.createdAt
-                ? order.createdAt
+        let time = "시간 없음";
+
+
+        if (order.createdAt) {
+
+            time =
+                order.createdAt
                     .toDate()
-                    .toLocaleString("ko-KR")
-                : "시간 확인 중";
+                    .toLocaleString("ko-KR");
+
+        }
+
+
+        const div =
+            document.createElement("div");
+
+        div.className = "order";
 
 
         div.innerHTML = `
 
-            <div class="order-header">
+            <div class="order-top">
 
-                <div class="order-name">
+                <div class="name">
                     👤 ${escapeHTML(order.name)}
                 </div>
 
                 <div class="status">
-                    ${escapeHTML(order.status || "접수")}
+                    ${escapeHTML(
+                        order.status || "접수"
+                    )}
                 </div>
 
             </div>
 
+            <p>🕐 ${time}</p>
 
-            <p>
-                🕐 ${time}
-            </p>
-
-
-            <div>
-                ${itemsHTML}
-            </div>
-
+            ${items}
 
             <div class="total">
-
                 ${Number(order.total || 0)
                     .toLocaleString()}원
-
             </div>
-
 
             <div class="buttons">
 
@@ -334,7 +336,6 @@ function renderOrders(snapshot) {
                     완료
 
                 </button>
-
 
                 <button
                     class="delete"
@@ -356,73 +357,63 @@ function renderOrders(snapshot) {
 }
 
 
-/* ============================
-   주문 완료
-   ============================ */
+/* 완료 */
 
 window.completeOrder =
-    async function(id) {
+async function(id) {
 
-        try {
+    try {
 
-            await updateDoc(
-                doc(db, "orders", id),
-                {
-                    status: "완료"
-                }
-            );
+        await updateDoc(
+            doc(db, "orders", id),
+            {
+                status: "완료"
+            }
+        );
 
-        } catch (error) {
+    } catch (error) {
 
-            console.error(error);
+        alert(
+            "상태 변경 실패: " +
+            error.message
+        );
 
-            alert(
-                "주문 상태 변경에 실패했습니다."
-            );
+    }
 
-        }
-
-    };
+};
 
 
-/* ============================
-   주문 삭제
-   ============================ */
+/* 삭제 */
 
 window.removeOrder =
-    async function(id) {
+async function(id) {
 
-        if (
-            !confirm(
-                "이 주문을 삭제할까요?"
-            )
-        ) {
-            return;
-        }
+    if (!confirm(
+        "정말 이 주문을 삭제할까요?"
+    )) {
+        return;
+    }
 
 
-        try {
+    try {
 
-            await deleteDoc(
-                doc(db, "orders", id)
-            );
+        await deleteDoc(
+            doc(db, "orders", id)
+        );
 
-        } catch (error) {
+    } catch (error) {
 
-            console.error(error);
+        alert(
+            "삭제 실패: " +
+            error.message
+        );
 
-            alert(
-                "주문 삭제에 실패했습니다."
-            );
+    }
 
-        }
-
-    };
+};
 
 
-/* ============================
-   HTML 안전 처리
-   ============================ */
+/* HTML escape */
 
 function escapeHTML(value) {
 
