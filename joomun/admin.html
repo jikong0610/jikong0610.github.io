@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>주문 관리</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6fa;
+    color: #222;
+}
+
+header {
+    background: #222;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+
+.order {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.08);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.order-name {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.status {
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #eee;
+}
+
+.item {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.total {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 15px;
+}
+
+button {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.done {
+    background: #222;
+    color: white;
+}
+
+.delete {
+    background: #eee;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+.empty {
+    text-align: center;
+    padding: 50px;
+    color: #777;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>📋 주문 관리</h1>
+
+<p id="connection">
+연결 중...
+</p>
+
+</header>
+
+
+<div class="container">
+
+<div id="orders">
+    주문을 불러오는 중...
+</div>
+
+</div>
+
+
+<script type="module">
+
+/* ============================
+   Firebase
+   ============================ */
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    query,
+    orderBy,
+    onSnapshot,
+    doc,
+    updateDoc,
+    deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/*
+   👇 index.html과 똑같은 Firebase 설정을 넣으세요.
+*/
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDsmpnhM1PhQYwNZYXOXjKBrZyTUcNd1GI",
+  authDomain: "gun-game-multi.firebaseapp.com",
+  projectId: "gun-game-multi",
+  storageBucket: "gun-game-multi.firebasestorage.app",
+  messagingSenderId: "654895354599",
+  appId: "1:654895354599:web:0a1d5d505619e49d380842",
+  measurementId: "G-051STSK698"
+};
+
+
+
+const app =
+    initializeApp(firebaseConfig);
+
+const db =
+    getFirestore(app);
+
+
+/* ============================
+   주문 실시간 감시
+   ============================ */
+
+const ordersRef =
+    collection(db, "orders");
+
+
+const ordersQuery =
+    query(
+        ordersRef,
+        orderBy("createdAt", "desc")
+    );
+
+
+onSnapshot(
+    ordersQuery,
+
+    snapshot => {
+
+        document.getElementById(
+            "connection"
+        ).textContent =
+            "🟢 실시간 연결됨";
+
+        renderOrders(snapshot);
+
+    },
+
+    error => {
+
+        console.error(error);
+
+        document.getElementById(
+            "connection"
+        ).textContent =
+            "🔴 연결 오류";
+
+        document.getElementById(
+            "orders"
+        ).innerHTML =
+            `<div class="empty">
+                주문을 불러오지 못했습니다.
+            </div>`;
+
+    }
+);
+
+
+/* ============================
+   주문 표시
+   ============================ */
+
+function renderOrders(snapshot) {
+
+    const container =
+        document.getElementById("orders");
+
+
+    if (snapshot.empty) {
+
+        container.innerHTML =
+            `<div class="empty">
+                아직 주문이 없습니다.
+            </div>`;
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    snapshot.forEach(orderDoc => {
+
+        const order =
+            orderDoc.data();
+
+        const id =
+            orderDoc.id;
+
+
+        const div =
+            document.createElement("div");
+
+        div.className = "order";
+
+
+        let itemsHTML = "";
+
+
+        (order.items || []).forEach(item => {
+
+            const subtotal =
+                item.price * item.quantity;
+
+
+            itemsHTML += `
+                <div class="item">
+
+                    ${escapeHTML(item.name)}
+
+                    × ${item.quantity}
+
+                    =
+                    ${subtotal.toLocaleString()}원
+
+                </div>
+            `;
+
+        });
+
+
+        const time =
+            order.createdAt
+                ? order.createdAt
+                    .toDate()
+                    .toLocaleString("ko-KR")
+                : "시간 확인 중";
+
+
+        div.innerHTML = `
+
+            <div class="order-header">
+
+                <div class="order-name">
+                    👤 ${escapeHTML(order.name)}
+                </div>
+
+                <div class="status">
+                    ${escapeHTML(order.status || "접수")}
+                </div>
+
+            </div>
+
+
+            <p>
+                🕐 ${time}
+            </p>
+
+
+            <div>
+                ${itemsHTML}
+            </div>
+
+
+            <div class="total">
+
+                ${Number(order.total || 0)
+                    .toLocaleString()}원
+
+            </div>
+
+
+            <div class="buttons">
+
+                <button
+                    class="done"
+                    onclick="completeOrder('${id}')">
+
+                    완료
+
+                </button>
+
+
+                <button
+                    class="delete"
+                    onclick="removeOrder('${id}')">
+
+                    삭제
+
+                </button>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+/* ============================
+   주문 완료
+   ============================ */
+
+window.completeOrder =
+    async function(id) {
+
+        try {
+
+            await updateDoc(
+                doc(db, "orders", id),
+                {
+                    status: "완료"
+                }
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "주문 상태 변경에 실패했습니다."
+            );
+
+        }
+
+    };
+
+
+/* ============================
+   주문 삭제
+   ============================ */
+
+window.removeOrder =
+    async function(id) {
+
+        if (
+            !confirm(
+                "이 주문을 삭제할까요?"
+            )
+        ) {
+            return;
+        }
+
+
+        try {
+
+            await deleteDoc(
+                doc(db, "orders", id)
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "주문 삭제에 실패했습니다."
+            );
+
+        }
+
+    };
+
+
+/* ============================
+   HTML 안전 처리
+   ============================ */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+</script>
+
+</body>
+</html>
