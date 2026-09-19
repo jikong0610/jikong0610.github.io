@@ -1,0 +1,32 @@
+[
+  {
+    "id": "burger",
+    "name": "햄버거",
+    "price": 5000,
+    "emoji": "🍔"
+  },
+  {
+    "id": "pizza",
+    "name": "피자",
+    "price": 8000,
+    "emoji": "🍕"
+  },
+  {
+    "id": "chicken",
+    "name": "치킨",
+    "price": 7000,
+    "emoji": "🍗"
+  },
+  {
+    "id": "cola",
+    "name": "콜라",
+    "price": 1500,
+    "emoji": "🥤"
+  },
+  {
+    "id": "icecream",
+    "name": "아이스크림",
+    "price": 2000,
+    "emoji": "🍦"
+  }
+]
