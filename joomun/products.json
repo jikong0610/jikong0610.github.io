@@ -1,32 +1,32 @@
 [
   {
-    "id": "burger",
-    "name": "햄버거",
+    "id": "PotatoChip",
+    "name": "감자칩",
     "price": 5000,
-    "emoji": "🍔"
+    "emoji": "🥔"
   },
   {
-    "id": "pizza",
+    "id": "IceCream",
     "name": "피자",
-    "price": 8000,
-    "emoji": "🍕"
-  },
-  {
-    "id": "chicken",
-    "name": "치킨",
-    "price": 7000,
-    "emoji": "🍗"
-  },
-  {
-    "id": "cola",
-    "name": "콜라",
-    "price": 1500,
-    "emoji": "🥤"
-  },
-  {
-    "id": "icecream",
-    "name": "아이스크림",
-    "price": 2000,
+    "price": 1000,
     "emoji": "🍦"
+  },
+  {
+    "id": "Cereal",
+    "name": "시리얼",
+    "price": 7000,
+    "emoji": "🥣"
+  },
+  {
+    "id": "Water",
+    "name": "물",
+    "price": 1500,
+    "emoji": "💧"
+  },
+  {
+    "id": "Cookie",
+    "name": "쿠키",
+    "price": 2000,
+    "emoji": "🍪"
   }
 ]
