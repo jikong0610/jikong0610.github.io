@@ -20,8 +20,8 @@ body {
 header {
     background: #222;
     color: white;
-    padding: 20px;
     text-align: center;
+    padding: 22px;
 }
 
 .container {
@@ -32,18 +32,18 @@ header {
 
 .card {
     background: white;
-    border-radius: 15px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
 }
 
 input {
     width: 100%;
-    padding: 13px;
+    padding: 14px;
+    font-size: 16px;
     border: 1px solid #ddd;
     border-radius: 10px;
-    font-size: 16px;
 }
 
 .products {
@@ -59,17 +59,17 @@ input {
     text-align: center;
 }
 
-.product .emoji {
+.emoji {
     font-size: 45px;
 }
 
 .product h3 {
-    margin: 10px 0 5px;
+    margin-bottom: 5px;
 }
 
 .price {
     color: #666;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .quantity {
@@ -79,12 +79,13 @@ input {
     gap: 15px;
 }
 
-button {
+.quantity button {
+    width: 40px;
+    height: 40px;
     border: 0;
     border-radius: 10px;
-    padding: 10px 15px;
+    font-size: 22px;
     cursor: pointer;
-    font-size: 15px;
 }
 
 .minus,
@@ -94,23 +95,39 @@ button {
 
 .order-button {
     width: 100%;
+    padding: 16px;
+    border: 0;
+    border-radius: 12px;
     background: #222;
     color: white;
-    padding: 15px;
     font-size: 18px;
+    cursor: pointer;
+}
+
+.order-button:disabled {
+    background: #aaa;
 }
 
 .total {
-    font-size: 24px;
-    font-weight: bold;
     text-align: right;
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 15px;
 }
 
 .message {
-    margin-top: 15px;
-    padding: 12px;
-    border-radius: 10px;
     display: none;
+    margin-top: 15px;
+    padding: 14px;
+    border-radius: 10px;
+}
+
+.success {
+    background: #e5ffe8;
+}
+
+.error {
+    background: #ffe5e5;
 }
 </style>
 </head>
@@ -119,7 +136,7 @@ button {
 
 <header>
     <h1>🛒 주문하기</h1>
-    <p>상품을 선택하고 주문해주세요.</p>
+    <p>상품을 선택해주세요</p>
 </header>
 
 <div class="container">
@@ -132,28 +149,35 @@ button {
     <div class="card">
         <h2>🍴 상품</h2>
         <div id="products" class="products">
-            상품을 불러오는 중...
+            불러오는 중...
         </div>
     </div>
 
     <div class="card">
+
         <h2>💰 주문 금액</h2>
-        <div id="total" class="total">0원</div>
-        <br>
-        <button class="order-button" onclick="submitOrder()">
+
+        <div id="total" class="total">
+            0원
+        </div>
+
+        <button
+            id="orderButton"
+            class="order-button"
+            onclick="submitOrder()">
+
             주문하기
+
         </button>
 
         <div id="message" class="message"></div>
+
     </div>
 
 </div>
 
-<script type="module">
 
-/* ============================
-   Firebase 설정
-   ============================ */
+<script type="module">
 
 import {
     initializeApp
@@ -167,43 +191,63 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-/*
-   👇 Firebase Console에서 받은 설정으로 교체하세요.
-*/
+/* =========================
+   Firebase
+   ========================= */
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDsmpnhM1PhQYwNZYXOXjKBrZyTUcNd1GI",
-  authDomain: "gun-game-multi.firebaseapp.com",
-  projectId: "gun-game-multi",
-  storageBucket: "gun-game-multi.firebasestorage.app",
-  messagingSenderId: "654895354599",
-  appId: "1:654895354599:web:0a1d5d505619e49d380842",
-  measurementId: "G-051STSK698"
+
+    apiKey:
+        "AIzaSyDsmpnhM1PhQYwNZYXOXjKBrZyTUcNd1GI",
+
+    authDomain:
+        "gun-game-multi.firebaseapp.com",
+
+    projectId:
+        "gun-game-multi",
+
+    storageBucket:
+        "gun-game-multi.firebasestorage.app",
+
+    messagingSenderId:
+        "654895354599",
+
+    appId:
+        "1:654895354599:web:0a1d5d505619e49d380842",
+
+    measurementId:
+        "G-051STSK698"
 };
 
+
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
 
-/* ============================
-   상품
-   ============================ */
+/* =========================
+   데이터
+   ========================= */
 
 let products = [];
 let cart = {};
 
 
-/* 상품 JSON 읽기 */
+/* =========================
+   상품 불러오기
+   ========================= */
 
 async function loadProducts() {
 
     try {
 
-        const response = await fetch("products.json");
+        const response =
+            await fetch("./products.json");
 
         if (!response.ok) {
-            throw new Error("products.json을 찾을 수 없습니다.");
+            throw new Error(
+                "products.json을 불러올 수 없습니다."
+            );
         }
 
         products = await response.json();
@@ -216,39 +260,51 @@ async function loadProducts() {
 
     } catch (error) {
 
+        console.error(error);
+
         document.getElementById("products").innerHTML =
-            `<p>상품을 불러오지 못했습니다.<br>${error.message}</p>`;
+            "❌ 상품을 불러오지 못했습니다.";
 
     }
 }
 
 
-/* 상품 표시 */
+/* =========================
+   상품 화면
+   ========================= */
 
 function renderProducts() {
 
-    const container = document.getElementById("products");
+    const container =
+        document.getElementById("products");
 
     container.innerHTML = "";
 
     products.forEach(product => {
 
-        const div = document.createElement("div");
+        const div =
+            document.createElement("div");
 
         div.className = "product";
 
         div.innerHTML = `
-            <div class="emoji">${product.emoji}</div>
 
-            <h3>${product.name}</h3>
+            <div class="emoji">
+                ${product.emoji}
+            </div>
+
+            <h3>
+                ${escapeHTML(product.name)}
+            </h3>
 
             <div class="price">
-                ${product.price.toLocaleString()}원
+                ${Number(product.price).toLocaleString()}원
             </div>
 
             <div class="quantity">
 
-                <button class="minus"
+                <button
+                    class="minus"
                     onclick="changeQuantity('${product.id}', -1)">
                     −
                 </button>
@@ -257,7 +313,8 @@ function renderProducts() {
                     0
                 </strong>
 
-                <button class="plus"
+                <button
+                    class="plus"
                     onclick="changeQuantity('${product.id}', 1)">
                     +
                 </button>
@@ -266,15 +323,17 @@ function renderProducts() {
         `;
 
         container.appendChild(div);
-
     });
 
 }
 
 
-/* 수량 변경 */
+/* =========================
+   수량
+   ========================= */
 
-window.changeQuantity = function(id, amount) {
+window.changeQuantity =
+function(id, amount) {
 
     cart[id] += amount;
 
@@ -282,13 +341,17 @@ window.changeQuantity = function(id, amount) {
         cart[id] = 0;
     }
 
-    document.getElementById(`qty-${id}`).textContent = cart[id];
+    document.getElementById(
+        `qty-${id}`
+    ).textContent = cart[id];
 
     updateTotal();
 };
 
 
-/* 총액 */
+/* =========================
+   총액
+   ========================= */
 
 function updateTotal() {
 
@@ -296,42 +359,64 @@ function updateTotal() {
 
     products.forEach(product => {
 
-        total += product.price * cart[product.id];
+        total +=
+            Number(product.price) *
+            cart[product.id];
 
     });
 
-    document.getElementById("total").textContent =
+    document.getElementById("total")
+        .textContent =
         total.toLocaleString() + "원";
-
 }
 
 
-/* 주문 */
+/* =========================
+   주문
+   ========================= */
 
-window.submitOrder = async function() {
+window.submitOrder =
+async function() {
 
     const name =
-        document.getElementById("name").value.trim();
+        document
+            .getElementById("name")
+            .value
+            .trim();
+
 
     if (!name) {
-        showMessage("이름을 입력해주세요.", true);
+
+        showMessage(
+            "이름을 입력해주세요.",
+            true
+        );
+
         return;
     }
 
 
     const items = [];
 
+
     products.forEach(product => {
 
-        const quantity = cart[product.id];
+        const quantity =
+            cart[product.id];
 
         if (quantity > 0) {
 
             items.push({
+
                 id: product.id,
+
                 name: product.name,
-                price: product.price,
+
+                price:
+                    Number(product.price),
+
                 quantity: quantity
+
             });
 
         }
@@ -341,42 +426,67 @@ window.submitOrder = async function() {
 
     if (items.length === 0) {
 
-        showMessage("상품을 하나 이상 선택해주세요.", true);
-        return;
+        showMessage(
+            "상품을 하나 이상 선택해주세요.",
+            true
+        );
 
+        return;
     }
 
 
-    const total = items.reduce(
-        (sum, item) =>
-            sum + item.price * item.quantity,
-        0
-    );
+    const total =
+        items.reduce(
+            (sum, item) =>
+                sum +
+                item.price *
+                item.quantity,
+            0
+        );
+
+
+    const button =
+        document.getElementById(
+            "orderButton"
+        );
+
+    button.disabled = true;
+
+    button.textContent =
+        "주문 저장 중...";
 
 
     try {
 
-        await addDoc(collection(db, "orders"), {
+        await addDoc(
+            collection(db, "orders"),
+            {
 
-            name: name,
+                name: name,
 
-            items: items,
+                items: items,
 
-            total: total,
+                total: total,
 
-            status: "접수",
+                status: "접수",
 
-            createdAt: serverTimestamp()
+                createdAt:
+                    serverTimestamp()
 
-        });
+            }
+        );
 
 
-        showMessage("✅ 주문이 접수되었습니다!", false);
+        showMessage(
+            `✅ 주문이 접수되었습니다! 총 ${total.toLocaleString()}원`,
+            false
+        );
 
 
-        /* 초기화 */
+        document.getElementById(
+            "name"
+        ).value = "";
 
-        document.getElementById("name").value = "";
 
         products.forEach(product => {
 
@@ -388,6 +498,7 @@ window.submitOrder = async function() {
 
         });
 
+
         updateTotal();
 
 
@@ -396,16 +507,25 @@ window.submitOrder = async function() {
         console.error(error);
 
         showMessage(
-            "주문 저장에 실패했습니다. Firebase 설정을 확인해주세요.",
+            "❌ 주문 저장 실패\n" +
+            error.message,
             true
         );
 
     }
 
+
+    button.disabled = false;
+
+    button.textContent =
+        "주문하기";
+
 };
 
 
-/* 메시지 */
+/* =========================
+   메시지
+   ========================= */
 
 function showMessage(text, error) {
 
@@ -414,11 +534,27 @@ function showMessage(text, error) {
 
     message.textContent = text;
 
+    message.className =
+        "message " +
+        (error ? "error" : "success");
+
     message.style.display = "block";
 
-    message.style.background =
-        error ? "#ffe5e5" : "#e5ffe8";
+}
 
+
+/* =========================
+   HTML escape
+   ========================= */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 
