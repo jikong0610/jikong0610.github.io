@@ -1,32 +1,21 @@
 [
   {
-    "id": "PotatoChip",
-    "name": "감자칩",
-    "price": 5000,
-    "emoji": "🥔"
-  },
-  {
-    "id": "IceCream",
-    "name": "아이스크림",
-    "price": 1000,
-    "emoji": "🍦"
-  },
-  {
-    "id": "Cereal",
-    "name": "시리얼",
-    "price": 7000,
-    "emoji": "🥣"
-  },
-  {
-    "id": "Water",
-    "name": "물",
-    "price": 1500,
-    "emoji": "💧"
-  },
-  {
     "id": "Cookie",
     "name": "쿠키",
     "price": 2000,
     "emoji": "🍪"
-  }
+  },
+  {
+    "id": "AppleJugo",
+    "name": "사과주스",
+    "price": 2000,
+    "emoji": "🍷"
+  },
+  {
+    "id": "Yakurut",
+    "name": "야쿠르트",
+    "price": 2000,
+    "emoji": "🍹"
+  },
+  
 ]
