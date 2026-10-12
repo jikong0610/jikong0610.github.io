@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000080">
+  <meta name="description" content="Jikong0610의 개인 홈페이지. 프로그래밍, Rust, 웹 프로젝트를 소개합니다.">
+  <title>★ Jikong0610's Homepage ★</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #c0c0c0;
+      color: #111;
+      font-family: Verdana, Arial, "돋움", sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    a {
+      color: #0000ee;
+    }
+
+    a:visited {
+      color: #551a8b;
+    }
+
+    a:hover {
+      color: #cc0000;
+    }
+
+    .window {
+      max-width: 900px;
+      margin: 12px auto;
+      padding: 8px;
+      background: #fff;
+      border: 3px ridge #eee;
+      box-shadow: 3px 3px 0 #555;
+    }
+
+    .titlebar {
+      padding: 8px 12px;
+      background: #000080;
+      color: white;
+      font-weight: bold;
+    }
+
+    .hero {
+      margin-top: 10px;
+      padding: 24px 12px;
+      text-align: center;
+      border: 3px ridge #ddd;
+      background: #fff;
+    }
+
+    h1 {
+      margin: 8px 0;
+      color: #000080;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(26px, 6vw, 42px);
+    }
+
+    h2 {
+      margin-top: 28px;
+      padding-bottom: 5px;
+      color: #000080;
+      border-bottom: 3px groove #ccc;
+      font-size: 21px;
+    }
+
+    h3 {
+      margin-top: 0;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      color: #444;
+    }
+
+    .notice {
+      color: #c00000;
+      font-weight: bold;
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .menu a,
+    .button {
+      display: inline-block;
+      padding: 5px 12px;
+      color: #000;
+      background: #ddd;
+      border: 3px outset #eee;
+      text-decoration: none;
+    }
+
+    .menu a:active,
+    .button:active {
+      border-style: inset;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      min-width: 0;
+      padding: 14px;
+      background: #f7f7f7;
+      border: 3px groove #ddd;
+      overflow-wrap: anywhere;
+    }
+
+    .card p {
+      margin-bottom: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #ffffcc;
+      border: 1px solid #999;
+      font-size: 12px;
+    }
+
+    .profile {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .profile th,
+    .profile td {
+      padding: 8px;
+      border: 1px solid #999;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .profile th {
+      width: 110px;
+      background: #e5e5e5;
+    }
+
+    .divider {
+      margin: 20px 0;
+      border: 0;
+      border-top: 2px dashed #888;
+    }
+
+    .footer {
+      padding: 15px 5px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 5px;
+        font-size: 14px;
+      }
+
+      .window {
+        margin: 5px auto;
+        padding: 6px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .profile th {
+        width: 85px;
+      }
+
+      .hero {
+        padding: 18px 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="window">
+    <div class="titlebar">
+      ★ JIKONG0610.EXE — Personal Homepage
+    </div>
+
+    <header class="hero">
+      <div aria-hidden="true">💾 🖥️ 🌐 💿</div>
+      <h1>Welcome to Jikong0610!</h1>
+      <p class="subtitle">
+        나만의 작은 인터넷 공간에 오신 것을 환영합니다.
+      </p>
+      <p class="notice">
+        ★ PROGRAMMING • EXPERIMENTS • OPEN SOURCE ★
+      </p>
+
+      <nav class="menu" aria-label="주요 메뉴">
+        <a href="#about">[ About Me ]</a>
+        <a href="#projects">[ Projects ]</a>
+        <a href="#links">[ My Links ]</a>
+        <a href="https://github.com/jikong0610"
+           target="_blank" rel="noopener noreferrer">[ GitHub ]</a>
+      </nav>
+    </header>
+
+    <section id="about">
+      <h2>📟 About Me</h2>
+      <p>
+        안녕하세요! <strong>Jikong0610</strong>의 홈페이지입니다.
+        저는 프로그래밍과 컴퓨터, 운영체제, 웹 개발을 좋아합니다.
+      </p>
+
+      <table class="profile">
+        <tbody>
+          <tr>
+            <th>Nickname</th>
+            <td>Jikong0610</td>
+          </tr>
+          <tr>
+            <th>Interests</th>
+            <td>Programming, Linux, Windows, Minecraft, Web</td>
+          </tr>
+          <tr>
+            <th>Languages</th>
+            <td>Rust, C, Java, HTML, CSS, JavaScript</td>
+          </tr>
+          <tr>
+            <th>Mission</th>
+            <td>직접 만들고, 실험하고, 배우기!</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="projects">
+      <h2>💿 My Projects</h2>
+
+      <div class="grid">
+        <article class="card">
+          <span class="tag">RUST</span>
+          <h3>🦀 Rust Projects</h3>
+          <p>
+            Rust를 활용한 프로그램과 다양한 개발 실험을 진행합니다.
+          </p>
+          <a href="https://github.com/jikong0610"
+             target="_blank" rel="noopener noreferrer">
+            GitHub에서 보기 &raquo;
+          </a>
+        </article>
+
+        <article class="card">
+          <span class="tag">LANGUAGE</span>
+          <h3>🔤 LetterLang</h3>
+          <p>
+            문자와 언어에 관한 아이디어를 실험하는 프로젝트입니다.
+          </p>
+          <a href="https://github.com/jikong0610"
+             target="_blank" rel="noopener noreferrer">
+            프로젝트 둘러보기 &raquo;
+          </a>
+        </article>
+
+        <article class="card">
+          <span class="tag">LAUNCHER</span>
+          <h3>🚀 CantarLauncher</h3>
+          <p>
+            Minecraft 관련 개발과 런처 제작에 관심이 있습니다.
+          </p>
+          <a href="https://github.com/jikong0610"
+             target="_blank" rel="noopener noreferrer">
+            GitHub 저장소 &raquo;
+          </a>
+        </article>
+
+        <article class="card">
+          <span class="tag">WEB</span>
+          <h3>🌐 Web Experiments</h3>
+          <p>
+            HTML과 CSS로 웹페이지를 만들고 여러 가지 기능을 실험합니다.
+          </p>
+          <a href="https://github.com/jikong0610"
+             target="_blank" rel="noopener noreferrer">
+            웹 프로젝트 보기 &raquo;
+          </a>
+        </article>
+      </div>
+    </section>
+
+    <section id="links">
+      <h2>🔗 My Web Pages</h2>
+      <p>이 홈페이지의 다른 페이지도 방문해 보세요!</p>
+
+      <ul>
+        <li><a href="piano.html">🎹 Piano Page</a></li>
+        <li><a href="minec.html">⛏️ Minecraft Page</a></li>
+        <li><a href="alpi.html">🐧 Alpine Linux Page</a></li>
+        <li>
+          <a href="https://github.com/jikong0610"
+             target="_blank" rel="noopener noreferrer">
+            💻 My GitHub Profile
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <hr class="divider">
+
+    <section>
+      <h2>📡 Guestbook</h2>
+      <p>
+        방문해 주셔서 감사합니다!
+        이 홈페이지는 계속해서 업데이트될 예정입니다.
+      </p>
+      <p>
+        <a class="button"
+           href="https://github.com/jikong0610"
+           target="_blank" rel="noopener noreferrer">
+          GitHub 방문하기
+        </a>
+      </p>
+      <p class="subtitle">
+        ※ 방명록 기능은 아직 구현되지 않았습니다.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <hr>
+      <p>★ Best viewed with curiosity and imagination ★</p>
+      <p>Made with HTML & CSS · Jikong0610</p>
+      <p>© 2026 Jikong0610. All rights reserved.</p>
+      <p><a href="#top" onclick="window.scrollTo(0,0); return false;">맨 위로 ↑</a></p>
+    </footer>
+  </main>
+</body>
+</html>
