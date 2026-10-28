@@ -421,38 +421,110 @@ function drawEnemyKnight(x,y,s,color,boss){
 }
 function draw(){
  ctx.clearRect(0,0,W,H);
- // Pixel-grass tiles
- for(let y=0;y<H;y+=CELL)for(let x=0;x<W;x+=CELL){
-  ctx.fillStyle=((x/CELL+y/CELL)%2===0)?"#83b85b":"#7daf52";ctx.fillRect(x,y,CELL,CELL);
-  ctx.fillStyle="#6c9f49";ctx.fillRect(x+5,y+7,3,3);ctx.fillRect(x+27,y+28,4,3);
-  if((x*7+y*3)%11===0){ctx.fillStyle="#d5d778";ctx.fillRect(x+17,y+15,3,3);}
+ // High-detail procedural pixel-art grassland background (Canvas only)
+ // Layer 1: varied meadow tiles with deterministic grass, clover, flowers and tiny stones
+ const tile=40;
+ for(let y=0;y<H;y+=tile) for(let x=0;x<W;x+=tile){
+  const seed=(x*17+y*31+Math.floor(x/40)*13)%97;
+  ctx.fillStyle=((Math.floor(x/tile)+Math.floor(y/tile))%2===0)?"#82b85c":"#78ad53";
+  ctx.fillRect(x,y,tile,tile);
+  // subtle tile highlights and shadows
+  pixel(x,y,40,2,"#9bc96b"); pixel(x,y+38,40,2,"#679849");
+  pixel(x+2,y+4,2,12,"#8fc466"); pixel(x+36,y+7,2,11,"#6fa04b");
+  // repeated grass tufts, with stable placement so they do not flicker
+  for(let k=0;k<3;k++){
+   const gx=x+5+((seed*(k+3)+k*11)%29), gy=y+5+((seed*(k+7)+k*13)%28);
+   pixel(gx,gy,2,5,"#5f9646");pixel(gx+2,gy+2,3,2,"#a1ca67");
+  }
+  if(seed%5===0){pixel(x+12,y+22,3,3,"#f4df8a");pixel(x+15,y+24,2,3,"#4f9144");}
+  if(seed%9===0){pixel(x+27,y+12,5,3,"#b9b995");pixel(x+28,y+11,3,2,"#d7d4ad");}
+  if(seed%13===0){pixel(x+7,y+29,3,3,"#e8c1d5");pixel(x+9,y+32,2,3,"#4f9144");}
  }
- // Fantasy grassland scenery: distant hills, clouds, pond, flowers and shrubs (Canvas only)
- // Soft pixel hills at the edges of the battlefield
- pixel(0,0,210,28,"#6c9b4d");pixel(0,0,160,18,"#79a954");pixel(600,0,360,24,"#709e4d");pixel(720,0,240,14,"#80ad57");
- pixel(0,500,270,40,"#6b9948");pixel(0,516,320,24,"#5f8c43");pixel(620,505,340,35,"#6b9948");pixel(700,521,260,19,"#5b8740");
- // Distant blocky mountains
- pixel(95,22,36,18,"#91b96a");pixel(111,10,20,12,"#91b96a");pixel(127,22,34,18,"#91b96a");pixel(108,7,7,7,"#c8d6a0");pixel(124,7,7,7,"#c8d6a0");
- pixel(690,22,42,18,"#91b96a");pixel(708,9,22,13,"#91b96a");pixel(727,22,40,18,"#91b96a");pixel(705,7,8,7,"#c8d6a0");pixel(722,7,8,7,"#c8d6a0");
- // Small blocky clouds
- for(const [cx,cy] of [[310,42],[500,28],[820,75],[40,180]]){pixel(cx,cy,34,8,"#d5e5b7");pixel(cx+7,cy-6,18,8,"#d5e5b7");pixel(cx+14,cy-10,10,5,"#e5edca");}
- // A little pond tucked into the upper-right grass
- pixel(804,185,70,34,"#527b43");pixel(809,181,62,34,"#6d9b50");pixel(814,185,52,25,"#4c9eb0");pixel(820,188,34,4,"#a4d9d3");pixel(835,199,19,4,"#79c4ca");pixel(809,177,10,5,"#b4c77a");pixel(861,209,10,5,"#b4c77a");
- // Bushes and flower patches along the edges, kept away from the main path
- for(const [bx,by] of [[20,320],[95,300],[280,40],[420,390],[630,30],[840,280],[810,390],[300,490],[470,470]]){
-  pixel(bx,by+8,20,8,"#4c793d");pixel(bx+3,by+3,14,9,"#4e8a43");pixel(bx+6,by,8,8,"#65a34b");pixel(bx+8,by+2,3,3,"#9bc76a");
+ // Layer 2: distant rolling hills and forest silhouettes around the horizon
+ pixel(0,0,960,72,"#9cc975");
+ pixel(0,39,130,31,"#77ae57");pixel(0,30,62,18,"#82b960");
+ pixel(90,23,110,39,"#73a952");pixel(135,13,76,50,"#80b65a");
+ pixel(200,39,130,30,"#6e9f4c");pixel(250,27,74,42,"#7db257");
+ pixel(540,35,135,35,"#73a650");pixel(605,20,100,48,"#82b75b");
+ pixel(690,39,130,31,"#6d9c49");pixel(755,24,105,47,"#7daf55");pixel(860,36,100,34,"#6e9e4b");
+ // sunlit mountain tops
+ pixel(118,18,17,7,"#c8dda0");pixel(129,11,20,8,"#d9e5b1");pixel(145,20,14,7,"#b5d18c");
+ pixel(624,24,15,7,"#c8dda0");pixel(637,16,18,8,"#d9e5b1");pixel(653,25,14,7,"#b5d18c");
+ // soft pixel clouds with shaded undersides
+ for(const [cx,cy] of [[305,38],[455,24],[800,82],[55,150]]){
+  pixel(cx+3,cy+8,42,7,"#b7d49a");pixel(cx,cy+3,42,8,"#e0edc7");
+  pixel(cx+8,cy-3,25,11,"#edf4d9");pixel(cx+17,cy-8,15,9,"#f4f5df");
+  pixel(cx+9,cy+3,25,3,"#f6f7e6");
  }
- // Tiny wildflowers and scattered stones add texture to the meadow
- for(const [fx,fy,fc] of [[52,55,"#f2d77a"],[225,155,"#f4e6c2"],[315,310,"#dca6d2"],[475,170,"#f2d77a"],[690,390,"#f4e6c2"],[825,120,"#dca6d2"],[120,465,"#f2d77a"],[520,480,"#f4e6c2"]]){
-  pixel(fx,fy,3,3,fc);pixel(fx+3,fy+3,2,2,"#fff0b2");pixel(fx+1,fy+4,2,4,"#4b8742");
+ // Layer 3: detailed pond, shoreline, reeds and water glints in a safe grass corner
+ pixel(795,174,91,49,"#4c793f");pixel(801,169,79,52,"#a3b96b");
+ pixel(806,173,70,42,"#d1bd78");pixel(811,174,62,37,"#4b9eaf");
+ pixel(817,178,47,5,"#6dbbc0");pixel(824,184,28,3,"#b2e0d6");
+ pixel(838,192,24,4,"#74c9cc");pixel(815,198,16,3,"#7fcbd0");
+ pixel(855,179,10,3,"#c0e8d8");pixel(868,192,4,3,"#d7f0dc");
+ // reeds and lily pads
+ pixel(803,181,3,10,"#527d3c");pixel(800,178,5,3,"#6d9c49");
+ pixel(877,207,3,10,"#527d3c");pixel(874,204,5,3,"#6d9c49");
+ pixel(830,199,8,3,"#3e8c70");pixel(833,197,3,2,"#a3d77c");
+ // Layer 4: shrubs, flower clusters and decorative stones, away from the road
+ for(const [bx,by] of [[18,300],[88,286],[275,44],[420,390],[620,35],[838,280],[814,390],[285,492],[465,472],[95,175],[690,180],[505,405]]){
+  pixel(bx+3,by+12,24,6,"#4d7b3c");
+  pixel(bx+1,by+6,10,10,"#4d8b43");pixel(bx+8,by+1,13,14,"#5c9848");pixel(bx+17,by+7,10,9,"#4b8540");
+  pixel(bx+7,by+3,5,4,"#83b85a");pixel(bx+16,by+5,4,3,"#8dc161");
+  if((bx+by)%2===0){pixel(bx+11,by+8,3,3,"#d8e08a");}
  }
- pixel(215,430,10,5,"#9b9b79");pixel(218,427,5,3,"#b8b99a");pixel(480,55,9,4,"#999b7a");pixel(482,52,4,3,"#bfc09a");
- // Dirt path
- ctx.lineCap="square";ctx.lineJoin="round";ctx.strokeStyle="#9c7044";ctx.lineWidth=64;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();
- ctx.strokeStyle="#c49a62";ctx.lineWidth=52;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();
- ctx.strokeStyle="#d4b078";ctx.lineWidth=3;ctx.setLineDash([7,13]);ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);
- // Decoration
- drawPixelTree(30,260);drawPixelTree(80,400);drawPixelTree(250,30);drawPixelTree(450,420);drawPixelTree(650,30);drawPixelTree(875,150);drawPixelTree(860,260);
+ for(const [fx,fy,fc] of [[52,55,"#f2d77a"],[225,155,"#f4e6c2"],[315,310,"#dca6d2"],[475,170,"#f2d77a"],[690,390,"#f4e6c2"],[825,120,"#dca6d2"],[120,465,"#f2d77a"],[520,480,"#f4e6c2"],[385,52,"#f2d77a"],[710,255,"#f3d9e9"],[70,235,"#f5e9a4"],[600,420,"#f2d77a"],[185,365,"#dca6d2"],[740,145,"#f4e6c2"]]){
+  pixel(fx,fy,3,3,fc);pixel(fx+3,fy+2,2,3,"#fff3c2");pixel(fx+1,fy+4,2,5,"#4b8742");
+ }
+ // little stones with highlights
+ for(const [sx,sy] of [[215,430],[480,55],[332,385],[705,285],[115,210],[535,140],[775,300]]){
+  pixel(sx,sy+3,11,4,"#858f6e");pixel(sx+2,sy,7,4,"#b6b99a");pixel(sx+4,sy+1,4,2,"#d3d4b0");
+ }
+ // Layer 5: pixel trees with leafy crowns and small shadow patches along the edges
+ function detailedTree(x,y,scale=1){
+  const q=(dx,dy,w,h,c)=>pixel(x+dx*scale,y+dy*scale,w*scale,h*scale,c);
+  q(8,18,10,19,"#68472e");q(10,18,4,18,"#8b6039");q(3,34,21,4,"#507d3e");
+  q(1,10,25,18,"#347343");q(5,3,20,22,"#3f8545");q(9,0,14,18,"#55964a");
+  q(4,9,7,7,"#70ad50");q(14,4,6,7,"#7fbb5a");q(18,13,5,7,"#2f6d3b");
+  q(7,17,5,4,"#8fc76a");q(2,25,7,3,"#5b9b47");
+ }
+ detailedTree(24,245,1.15);detailedTree(78,386,1.05);detailedTree(245,24,.9);
+ detailedTree(438,411,1.0);detailedTree(635,25,.95);detailedTree(876,130,1.0);detailedTree(867,248,.9);
+ // Dirt road: deep shadow, layered earth, bright worn center and irregular pixel stones
+ ctx.lineCap="square";ctx.lineJoin="round";
+ ctx.strokeStyle="#5b5035";ctx.lineWidth=76;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(const pt of path.slice(1))ctx.lineTo(pt.x,pt.y);ctx.stroke();
+ ctx.strokeStyle="#8a613c";ctx.lineWidth=68;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(const pt of path.slice(1))ctx.lineTo(pt.x,pt.y);ctx.stroke();
+ ctx.strokeStyle="#b7844d";ctx.lineWidth=58;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(const pt of path.slice(1))ctx.lineTo(pt.x,pt.y);ctx.stroke();
+ ctx.strokeStyle="#c99b62";ctx.lineWidth=46;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(const pt of path.slice(1))ctx.lineTo(pt.x,pt.y);ctx.stroke();
+ // road edging stones along straight segments
+ for(let i=1;i<path.length;i++){
+  const a=path[i-1],b=path[i],len=dist(a,b),steps=Math.floor(len/28);
+  for(let j=1;j<steps;j++){
+   const t=j/steps,px=a.x+(b.x-a.x)*t,py=a.y+(b.y-a.y)*t;
+   const nx=-(b.y-a.y)/(len||1),ny=(b.x-a.x)/(len||1),side=(j%2?1:-1);
+   pixel(px+nx*side*31-2,py+ny*side*31-2,5,5,j%3===0?"#d2b77d":"#9d8155");
+  }
+ }
+ // subtle wagon tracks and scattered gravel on road surface
+ ctx.strokeStyle="#9b7045";ctx.lineWidth=3;ctx.setLineDash([13,17]);ctx.beginPath();ctx.moveTo(path[0].x,path[0].y-8);for(const pt of path.slice(1))ctx.lineTo(pt.x,pt.y-8);ctx.stroke();ctx.beginPath();ctx.moveTo(path[0].x,path[0].y+8);for(const pt of path.slice(1))ctx.lineTo(pt.x,pt.y+8);ctx.stroke();ctx.setLineDash([]);
+ for(let i=0;i<70;i++){
+  const px=(i*137+53)%960,py=(i*83+71)%540;
+  let nearRoad=false;
+  for(let j=1;j<path.length;j++){
+   const a=path[j-1],b=path[j],dx=b.x-a.x,dy=b.y-a.y;
+   const t=Math.max(0,Math.min(1,((px-a.x)*dx+(py-a.y)*dy)/(dx*dx+dy*dy||1)));
+   if(Math.hypot(px-(a.x+t*dx),py-(a.y+t*dy))<22){nearRoad=true;break;}
+  }
+  if(nearRoad){pixel(px,py,3,2,i%3===0?"#dfb779":"#a8794c");}
+ }
+ // edge foliage and signposts near the path, preserving a clear playable route
+ for(const [tx,ty] of [[18,264],[205,139],[295,260],[405,138],[610,140],[690,380],[806,405]]){
+  pixel(tx,ty+9,13,4,"#4b793d");pixel(tx+2,ty+3,9,8,"#5e9947");pixel(tx+4,ty,5,6,"#77b356");
+ }
+ // small wooden direction signs at bends
+ for(const [sx,sy] of [[177,145],[377,145],[577,145],[777,365]]){
+  pixel(sx,sy,3,17,"#67472d");pixel(sx-7,sy,18,8,"#76502f");pixel(sx-5,sy+2,14,2,"#b17d43");pixel(sx+2,sy+2,3,2,"#e0c16f");
+ }
  // Base: pixel-art noble manor / fortified mansion (Canvas only)
  // Lawn shadow and stone foundation
  pixel(858,488,86,9,"#49683a");
