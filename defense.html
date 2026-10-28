@@ -427,15 +427,57 @@ function draw(){
   ctx.fillStyle="#6c9f49";ctx.fillRect(x+5,y+7,3,3);ctx.fillRect(x+27,y+28,4,3);
   if((x*7+y*3)%11===0){ctx.fillStyle="#d5d778";ctx.fillRect(x+17,y+15,3,3);}
  }
+ // Fantasy grassland scenery: distant hills, clouds, pond, flowers and shrubs (Canvas only)
+ // Soft pixel hills at the edges of the battlefield
+ pixel(0,0,210,28,"#6c9b4d");pixel(0,0,160,18,"#79a954");pixel(600,0,360,24,"#709e4d");pixel(720,0,240,14,"#80ad57");
+ pixel(0,500,270,40,"#6b9948");pixel(0,516,320,24,"#5f8c43");pixel(620,505,340,35,"#6b9948");pixel(700,521,260,19,"#5b8740");
+ // Distant blocky mountains
+ pixel(95,22,36,18,"#91b96a");pixel(111,10,20,12,"#91b96a");pixel(127,22,34,18,"#91b96a");pixel(108,7,7,7,"#c8d6a0");pixel(124,7,7,7,"#c8d6a0");
+ pixel(690,22,42,18,"#91b96a");pixel(708,9,22,13,"#91b96a");pixel(727,22,40,18,"#91b96a");pixel(705,7,8,7,"#c8d6a0");pixel(722,7,8,7,"#c8d6a0");
+ // Small blocky clouds
+ for(const [cx,cy] of [[310,42],[500,28],[820,75],[40,180]]){pixel(cx,cy,34,8,"#d5e5b7");pixel(cx+7,cy-6,18,8,"#d5e5b7");pixel(cx+14,cy-10,10,5,"#e5edca");}
+ // A little pond tucked into the upper-right grass
+ pixel(804,185,70,34,"#527b43");pixel(809,181,62,34,"#6d9b50");pixel(814,185,52,25,"#4c9eb0");pixel(820,188,34,4,"#a4d9d3");pixel(835,199,19,4,"#79c4ca");pixel(809,177,10,5,"#b4c77a");pixel(861,209,10,5,"#b4c77a");
+ // Bushes and flower patches along the edges, kept away from the main path
+ for(const [bx,by] of [[20,320],[95,300],[280,40],[420,390],[630,30],[840,280],[810,390],[300,490],[470,470]]){
+  pixel(bx,by+8,20,8,"#4c793d");pixel(bx+3,by+3,14,9,"#4e8a43");pixel(bx+6,by,8,8,"#65a34b");pixel(bx+8,by+2,3,3,"#9bc76a");
+ }
+ // Tiny wildflowers and scattered stones add texture to the meadow
+ for(const [fx,fy,fc] of [[52,55,"#f2d77a"],[225,155,"#f4e6c2"],[315,310,"#dca6d2"],[475,170,"#f2d77a"],[690,390,"#f4e6c2"],[825,120,"#dca6d2"],[120,465,"#f2d77a"],[520,480,"#f4e6c2"]]){
+  pixel(fx,fy,3,3,fc);pixel(fx+3,fy+3,2,2,"#fff0b2");pixel(fx+1,fy+4,2,4,"#4b8742");
+ }
+ pixel(215,430,10,5,"#9b9b79");pixel(218,427,5,3,"#b8b99a");pixel(480,55,9,4,"#999b7a");pixel(482,52,4,3,"#bfc09a");
  // Dirt path
  ctx.lineCap="square";ctx.lineJoin="round";ctx.strokeStyle="#9c7044";ctx.lineWidth=64;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();
  ctx.strokeStyle="#c49a62";ctx.lineWidth=52;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();
  ctx.strokeStyle="#d4b078";ctx.lineWidth=3;ctx.setLineDash([7,13]);ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);
  // Decoration
  drawPixelTree(30,260);drawPixelTree(80,400);drawPixelTree(250,30);drawPixelTree(450,420);drawPixelTree(650,30);drawPixelTree(875,150);drawPixelTree(860,260);
- // Base
- ctx.fillStyle="#3d5237";ctx.fillRect(875,420,60,70);ctx.fillStyle="#b9d0a0";ctx.fillRect(884,430,42,50);ctx.fillStyle="#536f47";ctx.fillRect(894,444,22,36);ctx.fillStyle="#e9d28a";ctx.fillRect(895,420,20,10);
- ctx.fillStyle="#18251c";ctx.font="bold 13px monospace";ctx.fillText("BASE",883,510);
+ // Base: pixel-art noble manor / fortified mansion (Canvas only)
+ // Lawn shadow and stone foundation
+ pixel(858,488,86,9,"#49683a");
+ pixel(862,481,80,8,"#76634b");pixel(858,477,88,5,"#b5a17c");
+ // Main manor walls
+ pixel(870,438,64,40,"#6d4937");pixel(874,436,56,42,"#e7d3a0");
+ pixel(870,432,64,8,"#55372d");pixel(866,429,72,6,"#8e4f3d");
+ // Roof tiers and gables
+ pixel(872,420,60,7,"#6f3431");pixel(878,414,48,7,"#8c3f37");pixel(886,408,32,7,"#a64c3f");
+ pixel(883,408,5,8,"#e2bd73");pixel(916,408,5,8,"#e2bd73");
+ // Left and right manor wings / corner turrets
+ pixel(862,438,14,40,"#d7bf8c");pixel(862,430,14,9,"#7e3d35");pixel(860,426,18,5,"#a95043");
+ pixel(928,438,14,40,"#d7bf8c");pixel(928,430,14,9,"#7e3d35");pixel(926,426,18,5,"#a95043");
+ // Turret roofs and little gold finials
+ pixel(861,420,16,7,"#8d3f37");pixel(864,414,10,7,"#ad5142");pixel(866,410,6,5,"#d8b35d");
+ pixel(927,420,16,7,"#8d3f37");pixel(930,414,10,7,"#ad5142");pixel(932,410,6,5,"#d8b35d");
+ // Glowing windows with dark frames
+ for(const wx of [878,918]){pixel(wx,441,9,13,"#5a4034");pixel(wx+2,443,5,9,"#8bd0db");pixel(wx+4,443,1,9,"#e7f0c2");pixel(wx+2,447,5,1,"#f3e2a0");}
+ pixel(893,438,17,21,"#624131");pixel(896,441,11,18,"#a8794d");pixel(900,444,3,15,"#51362c");pixel(897,440,2,3,"#f1d276");
+ // Balcony, stone trim and royal banner
+ pixel(884,433,36,3,"#e8d7aa");pixel(887,430,30,3,"#c49a5d");
+ pixel(900,397,2,16,"#513a2a");pixel(902,398,13,8,"#c83f43");pixel(902,398,13,2,"#f1d276");pixel(907,400,3,4,"#f5d66c");
+ // Entry steps and name plaque
+ pixel(890,477,24,4,"#c6b28c");pixel(886,481,32,4,"#e1d0a5");
+ pixel(873,490,62,13,"#17251c");ctx.fillStyle="#f5e6b6";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText("MANOR",904,500);ctx.textAlign="left";
  // Towers: hand-drawn pixel-art characters (no external images)
  for(const t of towers){
   let def=towerTypes[t.type],range=def.range+(t.level-1)*12;
