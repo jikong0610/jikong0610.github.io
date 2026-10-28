@@ -277,7 +277,9 @@ function startWave(){
 function spawnEnemy(){
  let boss=wave%5===0&&spawnLeft===1;
  let hp=(24+wave*10)*(boss?8:1),speed=(boss?24:35+Math.min(wave,15)*1.4);
- enemies.push({x:path[0].x,y:path[0].y,progress:0,hp,maxHp:hp,speed:speed*(.88+Math.random()*.24),boss,r:boss?17:10,reward:boss?100:8+Math.floor(wave/2),color:boss?"#8f4bc2":(["#d94d4d","#e2a43b","#8a68cb","#4a9fbd"][(wave-1)%4]),hit:0});
+ const kind=boss?"knight":(["slime","goblin","slime","goblin","knight"][(wave-1)%5]);
+ const colors={slime:"#65d66e",goblin:"#d6a34f",knight:"#8aa6c8"};
+ enemies.push({x:path[0].x,y:path[0].y,progress:0,hp,maxHp:hp,speed:speed*(.88+Math.random()*.24),boss,kind,r:boss?17:10,reward:boss?100:8+Math.floor(wave/2),color:boss?"#bd78ed":colors[kind],hit:0});
 }
 function placeTower(x,y,type){
  let def=towerTypes[type];if(gold<def.cost){log("[ERROR] 골드가 부족합니다.");return;}
@@ -359,6 +361,64 @@ function drawPixelTree(x,y){
  ctx.fillStyle="#397843";ctx.fillRect(x+1,y+4,18,12);ctx.fillRect(x+4,y,12,18);
  ctx.fillStyle="#72a64b";ctx.fillRect(x+4,y+3,5,4);
 }
+// Pixel-art sprite helpers. Every character is drawn with Canvas rectangles only.
+function pixel(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));}
+function drawArcher(x,y,s,level){
+ const p=(dx,dy,w,h,c)=>pixel(x+dx*s,y+dy*s,w*s,h*s,c);
+ // boots and legs
+ p(-10,7,7,7,"#27352d");p(3,7,7,7,"#27352d");p(-9,5,6,5,"#496b9c");p(3,5,6,5,"#496b9c");
+ // tunic and belt
+ p(-11,-5,22,13,"#376f49");p(-8,-3,16,9,"#4c9b5f");p(-11,3,22,3,"#c69b45");p(-2,2,4,4,"#f6d875");
+ // face, hair and helmet
+ p(-8,-16,16,12,"#e9b982");p(-9,-18,18,5,"#3d4b42");p(-11,-16,22,4,"#7d9bba");p(-8,-21,16,4,"#b7d0df");p(-5,-11,3,3,"#24312d");p(3,-11,3,3,"#24312d");p(-3,-7,6,2,"#a55b4d");
+ // quiver and pixel bow
+ p(8,-4,4,10,"#76502f");p(10,-3,2,8,"#e5c16c");p(13,-13,2,4,"#e9d7a5");p(14,-9,2,5,"#e9d7a5");p(13,-4,2,4,"#e9d7a5");
+ if(level>1){p(-13,-19,4,4,"#f3d66c");p(9,-19,4,4,"#f3d66c");}
+}
+function drawGoblinEngineer(x,y,s,level){
+ const p=(dx,dy,w,h,c)=>pixel(x+dx*s,y+dy*s,w*s,h*s,c);
+ p(-10,7,8,6,"#493a28");p(2,7,8,6,"#493a28");p(-9,4,7,5,"#b27c35");p(2,4,7,5,"#b27c35");
+ p(-10,-5,20,12,"#8a6135");p(-7,-3,14,8,"#c18a3d");p(-11,2,22,3,"#50432d");p(-2,1,4,4,"#f2ce5b");
+ // long ears, green face, goggles
+ p(-16,-14,7,5,"#4e9c55");p(9,-14,7,5,"#4e9c55");p(-10,-17,20,14,"#65bb63");p(-8,-20,16,5,"#d8b04b");p(-7,-14,14,6,"#d8b04b");p(-5,-13,4,4,"#263b2d");p(2,-13,4,4,"#263b2d");p(-2,-7,5,2,"#47713c");
+ // tool pack and wrench
+ p(8,-4,6,10,"#76502f");p(12,-5,3,8,"#b8c4b5");p(10,-7,7,3,"#b8c4b5");
+ if(level>1){p(-13,-19,5,4,"#e8e8d0");p(8,-19,5,4,"#e8e8d0");}
+}
+function drawCannonKnight(x,y,s,level){
+ const p=(dx,dy,w,h,c)=>pixel(x+dx*s,y+dy*s,w*s,h*s,c);
+ p(-11,7,8,7,"#303d4a");p(3,7,8,7,"#303d4a");p(-10,4,7,5,"#778da2");p(3,4,7,5,"#778da2");
+ p(-12,-6,24,13,"#607d9a");p(-9,-4,18,9,"#9eb6c8");p(-12,2,24,4,"#d1b35b");p(-3,0,6,5,"#e6d17b");
+ p(-9,-18,18,13,"#839eb3");p(-11,-20,22,5,"#c1d2dc");p(-7,-14,14,5,"#273746");p(-5,-13,3,3,"#f3d46c");p(2,-13,3,3,"#f3d46c");p(-3,-7,6,2,"#263746");
+ // shoulder plates and cannon
+ p(-16,-6,6,7,"#c0ced7");p(10,-6,6,7,"#c0ced7");p(9,-3,13,6,"#4d5961");p(18,-5,5,10,"#b3bec4");p(20,-3,3,6,"#313c42");
+ if(level>1){p(-14,-18,5,4,"#e8c95c");p(9,-18,5,4,"#e8c95c");}
+}
+function drawSlime(x,y,s,color,boss){
+ const p=(dx,dy,w,h,c)=>pixel(x+dx*s,y+dy*s,w*s,h*s,c);
+ // stepped, translucent-looking body
+ p(-11,0,22,5,"#37794a");p(-14,-5,28,8,"#37794a");p(-10,-11,20,7,"#37794a");p(-6,-15,12,5,"#37794a");
+ p(-11,-1,22,5,color);p(-14,-6,28,8,color);p(-10,-12,20,7,color);p(-6,-16,12,5,color);
+ p(-8,-12,5,4,"#d8ffd1");p(-6,-10,3,3,"#f4fff0");
+ p(-7,-5,4,5,"#193b32");p(3,-5,4,5,"#193b32");p(-3,1,6,2,"#286246");
+ if(boss){p(-13,-21,5,7,"#e8cb62");p(8,-21,5,7,"#e8cb62");p(-8,-24,16,4,"#f3d97d");}
+}
+function drawGoblin(x,y,s,color,boss){
+ const p=(dx,dy,w,h,c)=>pixel(x+dx*s,y+dy*s,w*s,h*s,c);
+ p(-9,5,7,7,"#4a3c2a");p(2,5,7,7,"#4a3c2a");p(-10,-1,20,9,"#8d6036");p(-7,0,14,6,color);
+ p(-15,-10,8,5,color);p(7,-10,8,5,color);p(-10,-15,20,15,color);p(-7,-18,14,5,"#476b3e");
+ p(-6,-10,4,4,"#f7df83");p(3,-10,4,4,"#f7df83");p(-5,-9,2,3,"#27372b");p(4,-9,2,3,"#27372b");p(-3,-3,7,2,"#513c2c");
+ p(8,-3,4,11,"#72502f");p(10,-7,4,5,"#b5bfc3");
+ if(boss){p(-12,-20,5,7,"#e6c85b");p(8,-20,5,7,"#e6c85b");p(-7,-23,14,4,"#f4dc83");}
+}
+function drawEnemyKnight(x,y,s,color,boss){
+ const p=(dx,dy,w,h,c)=>pixel(x+dx*s,y+dy*s,w*s,h*s,c);
+ p(-9,6,7,7,"#303d4a");p(2,6,7,7,"#303d4a");p(-10,2,8,6,color);p(2,2,8,6,color);
+ p(-11,-6,22,11,color);p(-8,-4,16,7,"#c4d1da");p(-10,2,20,3,"#4b5966");p(-2,0,4,4,"#e3c968");
+ p(-9,-17,18,12,color);p(-11,-19,22,5,"#d1dbe0");p(-7,-13,14,5,"#273847");p(-5,-12,3,3,"#f5d66a");p(2,-12,3,3,"#f5d66a");
+ p(-14,-5,5,8,"#d1dbe0");p(9,-5,5,8,"#d1dbe0");p(12,-13,3,17,"#9aa8b2");p(10,-15,7,4,"#d9e2e6");
+ if(boss){p(-12,-22,5,8,"#e8c85c");p(8,-22,5,8,"#e8c85c");p(-7,-25,14,4,"#f4dd83");}
+}
 function draw(){
  ctx.clearRect(0,0,W,H);
  // Pixel-grass tiles
@@ -376,27 +436,32 @@ function draw(){
  // Base
  ctx.fillStyle="#3d5237";ctx.fillRect(875,420,60,70);ctx.fillStyle="#b9d0a0";ctx.fillRect(884,430,42,50);ctx.fillStyle="#536f47";ctx.fillRect(894,444,22,36);ctx.fillStyle="#e9d28a";ctx.fillRect(895,420,20,10);
  ctx.fillStyle="#18251c";ctx.font="bold 13px monospace";ctx.fillText("BASE",883,510);
- // Towers
+ // Towers: hand-drawn pixel-art characters (no external images)
  for(const t of towers){
   let def=towerTypes[t.type],range=def.range+(t.level-1)*12;
   if(t===selectedTower){ctx.beginPath();ctx.arc(t.x,t.y,range,0,Math.PI*2);ctx.fillStyle="#eaf4c322";ctx.fill();ctx.strokeStyle="#eaf4c9aa";ctx.lineWidth=2;ctx.stroke();}
-  ctx.fillStyle="#27382a";ctx.fillRect(t.x-15,t.y-12,30,28);
-  ctx.fillStyle=def.color;ctx.fillRect(t.x-12,t.y-15,24,25);
-  ctx.fillStyle="#f7edc9";ctx.fillRect(t.x-7,t.y-10,14,6);
-  ctx.fillStyle="#344936";ctx.fillRect(t.x-5,t.y+2,10,9);
-  ctx.fillStyle="#18251c";ctx.fillRect(t.x-16,t.y+14,32,5);
-  ctx.fillStyle="#ffd45a";ctx.font="bold 12px monospace";ctx.fillText("L"+t.level,t.x-8,t.y-21);
-  if(t.flash>0){ctx.fillStyle="#fff4a6";ctx.fillRect(t.x-3,t.y-23,6,7);}
+  // shadow + little grass base
+  ctx.fillStyle="#38552c";ctx.fillRect(t.x-17,t.y+13,34,7);
+  ctx.fillStyle="#6e9847";ctx.fillRect(t.x-14,t.y+13,28,3);
+  if(t.type==="arrow") drawArcher(t.x,t.y,1.05,t.level);
+  else if(t.type==="rapid") drawGoblinEngineer(t.x,t.y,1.02,t.level);
+  else drawCannonKnight(t.x,t.y,1.05,t.level);
+  // level badge
+  ctx.fillStyle="#17251c";ctx.fillRect(t.x-13,t.y-27,26,12);
+  ctx.fillStyle="#ffe18a";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText("Lv"+t.level,t.x,t.y-18);ctx.textAlign="left";
+  if(t.flash>0){ctx.fillStyle="#fff4a6";ctx.fillRect(t.x-3,t.y-32,6,7);}
  }
- // Enemies
+ // Enemies: pixel slimes, goblins, and armored knights
  for(const e of enemies){
-  const r=e.r;
-  ctx.fillStyle="#18251c";ctx.fillRect(e.x-r-2,e.y-r-2,r*2+4,r*2+4);
-  ctx.fillStyle=e.hit>0?"#fff":e.color;ctx.fillRect(e.x-r,e.y-r,r*2,r*2);
-  ctx.fillStyle="#f5f0d1";ctx.fillRect(e.x-r/2,e.y-r/3,4,4);ctx.fillRect(e.x+2,e.y-r/3,4,4);
-  ctx.fillStyle="#18251c";ctx.fillRect(e.x-r,e.y-r-9,r*2,4);
-  ctx.fillStyle="#ef6262";ctx.fillRect(e.x-r,e.y-r-9,Math.max(0,r*2*e.hp/e.maxHp),4);
-  if(e.boss){ctx.fillStyle="#ffe6ff";ctx.font="bold 13px monospace";ctx.fillText("BOSS",e.x-18,e.y-r-14);}
+  const r=e.r, scale=e.boss?1.65:1;
+  if(e.kind==="slime") drawSlime(e.x,e.y,scale,e.hit>0?"#ffffff":e.color,e.boss);
+  else if(e.kind==="goblin") drawGoblin(e.x,e.y,scale,e.hit>0?"#ffffff":e.color,e.boss);
+  else drawEnemyKnight(e.x,e.y,scale,e.hit>0?"#ffffff":e.color,e.boss);
+  const barW=e.boss?48:28, barY=e.y-r*scale-13;
+  ctx.fillStyle="#17251c";ctx.fillRect(e.x-barW/2-1,barY-1,barW+2,6);
+  ctx.fillStyle="#572d2c";ctx.fillRect(e.x-barW/2,barY,barW,4);
+  ctx.fillStyle="#ef6262";ctx.fillRect(e.x-barW/2,barY,Math.max(0,barW*e.hp/e.maxHp),4);
+  if(e.boss){ctx.fillStyle="#fff0ff";ctx.font="bold 11px monospace";ctx.textAlign="center";ctx.fillText("BOSS",e.x,barY-4);ctx.textAlign="left";}
  }
  // Projectiles
  for(const s of shots){ctx.fillStyle=s.type==="cannon"?"#ff994e":s.type==="rapid"?"#d9f0ff":"#fff1a4";ctx.fillRect(s.x-3,s.y-3,7,7);}
