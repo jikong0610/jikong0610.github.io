@@ -230,7 +230,7 @@ const towerTypes={
  rapid:{name:"연사 타워",cost:85,range:105,damage:7,rate:0.22,color:"#b8d5df",icon:"⚙️"},
  cannon:{name:"폭발 타워",cost:110,range:115,damage:28,rate:1.35,color:"#ef9a61",icon:"💣"}
 };
-let gold=180,baseHP=20,wave=0,score=0,mana=0,towers=[],enemies=[],shots=[],particles=[];
+let gold=500,baseHP=20,wave=0,score=0,mana=0,towers=[],enemies=[],shots=[],particles=[];
 let selectedBuild=null,selectedTower=null,waveActive=false,spawnLeft=0,spawnTimer=0,gameOver=false,last=0,elapsed=0;
 let bestWave=Number(localStorage.getItem("defenceland_best_wave")||0);
 let bestScore=Number(localStorage.getItem("defenceland_best_score")||0);
